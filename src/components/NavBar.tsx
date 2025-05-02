@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Menu, X, ChevronDown } from 'lucide-react';
+import { useAuth } from "@/hooks/useAuth";
+import ProfileDropdown from "@/components/ProfileDropdown";
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // This would come from auth context in a real app
+  const { user } = useAuth();
 
   return (
     <nav className="bg-white shadow-md w-full z-10">
@@ -40,19 +42,19 @@ const NavBar = () => {
           </div>
           
           <div className="hidden md:flex items-center space-x-3">
-            {isLoggedIn ? (
+            {user ? (
               <>
                 <Link to="/dashboard">
                   <Button variant="ghost">Dashboard</Button>
                 </Link>
-                <Button variant="outline" onClick={() => setIsLoggedIn(false)}>Sign Out</Button>
+                <ProfileDropdown />
               </>
             ) : (
               <>
-                <Link to="/dashboard">
-                  <Button variant="ghost" onClick={() => setIsLoggedIn(true)}>Login</Button>
+                <Link to="/auth">
+                  <Button variant="ghost">Login</Button>
                 </Link>
-                <Link to="/dashboard">
+                <Link to="/auth">
                   <Button className="bg-gradient-to-r from-web3-purple to-web3-blue text-white">
                     Get Started
                   </Button>
@@ -100,21 +102,21 @@ const NavBar = () => {
           </div>
           <div className="pt-4 pb-3 border-t border-gray-200">
             <div className="flex items-center px-5">
-              {isLoggedIn ? (
+              {user ? (
                 <div className="flex-shrink-0 w-full space-y-2">
                   <Link to="/dashboard" onClick={() => setIsOpen(false)}>
                     <Button className="w-full" variant="ghost">Dashboard</Button>
                   </Link>
-                  <Button className="w-full" variant="outline" onClick={() => { setIsLoggedIn(false); setIsOpen(false); }}>
-                    Sign Out
-                  </Button>
+                  <Link to="/settings/profile" onClick={() => setIsOpen(false)}>
+                    <Button className="w-full" variant="ghost">Profile Settings</Button>
+                  </Link>
                 </div>
               ) : (
                 <div className="flex-shrink-0 w-full space-y-2">
-                  <Link to="/dashboard" onClick={() => { setIsLoggedIn(true); setIsOpen(false); }}>
+                  <Link to="/auth" onClick={() => setIsOpen(false)}>
                     <Button className="w-full" variant="ghost">Login</Button>
                   </Link>
-                  <Link to="/dashboard" onClick={() => { setIsLoggedIn(true); setIsOpen(false); }}>
+                  <Link to="/auth" onClick={() => setIsOpen(false)}>
                     <Button className="w-full bg-gradient-to-r from-web3-purple to-web3-blue text-white">
                       Get Started
                     </Button>

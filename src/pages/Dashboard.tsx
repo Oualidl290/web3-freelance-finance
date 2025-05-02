@@ -7,30 +7,11 @@ import Footer from "@/components/Footer";
 import DashboardOverview from "@/components/DashboardOverview";
 import WalletConnect from "@/components/WalletConnect";
 import InvoiceCreationForm from "@/components/InvoiceCreationForm";
-import AuthForm from "@/components/AuthForm";
+import { useAuth } from "@/hooks/useAuth";
 
 const Dashboard = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-
-  const handleAuthSuccess = () => {
-    setIsAuthenticated(true);
-  };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <NavBar />
-        <div className="flex-1 bg-gray-50 flex flex-col items-center justify-center p-4">
-          <div className="max-w-md w-full">
-            <h2 className="text-2xl font-bold text-center mb-6">Welcome to Web3Pay</h2>
-            <AuthForm onSuccess={handleAuthSuccess} />
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -55,11 +36,6 @@ const Dashboard = () => {
                     </span>
                     <span className="ml-1">Test Mode</span>
                   </Button>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-web3-purple flex items-center justify-center text-white font-medium">
-                    JD
-                  </div>
                 </div>
               </div>
             </div>
