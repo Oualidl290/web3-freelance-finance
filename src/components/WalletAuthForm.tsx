@@ -43,25 +43,40 @@ const WalletAuthForm = () => {
         params: [message, address],
       });
 
-      // Verify the signature on the server (would be done in an edge function)
-      // For now, we'll just simulate successful authentication
+      // In a real implementation, we would verify the signature on the server
+      // For now, we'll attempt to sign in with the wallet address as the email
+      // This is just for demonstration - in production, you'd use a proper auth flow
       
-      // Store wallet address in database
-      const { error } = await supabase.from('wallet_addresses').upsert({
-        user_id: "placeholder_user_id", // This would be the actual user ID after auth
-        address,
-        blockchain: 'ethereum',
+      // Create a custom email based on the wallet address
+      const walletEmail = `${address.toLowerCase()}@wallet.auth`;
+      
+      // Check if the user exists, if not sign them up
+      const { data: existingUser } = await supabase.auth.signInWithPassword({
+        email: walletEmail,
+        password: signature.substring(0, 20), // Using part of signature as password (demo only)
       });
-
-      if (error) throw error;
+      
+      if (!existingUser.user) {
+        // User doesn't exist, create them
+        const { data: newUser, error: signUpError } = await supabase.auth.signUp({
+          email: walletEmail,
+          password: signature.substring(0, 20), // Using part of signature as password (demo only)
+          options: {
+            data: {
+              wallet_address: address,
+              wallet_type: 'ethereum',
+            }
+          }
+        });
+        
+        if (signUpError) throw signUpError;
+      }
 
       toast({
         title: "Wallet Connected",
         description: `Connected with address ${address.substring(0, 6)}...${address.substring(address.length - 4)}`,
       });
       
-      // In a real implementation, you would authenticate with Supabase using JWT
-      // For now, we're just redirecting to show the flow
       navigate("/dashboard");
       
     } catch (error: any) {
