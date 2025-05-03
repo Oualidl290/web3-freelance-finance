@@ -63,20 +63,22 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Web3 Finance Custom Colors
-				web3: {
-					'blue-dark': '#0F172A',
-					'blue': '#1E40AF',
-					'blue-light': '#3B82F6',
-					'purple': '#8B5CF6',
-					'purple-light': '#C4B5FD',
-					'teal': '#06B6D4'
+				// Apple-style design palette
+				apple: {
+					'primary': '#FFFFFF',
+					'secondary': '#F5F5F7',
+					'accent1': '#0071E3',
+					'accent2': '#34C759',
+					'accent3': '#FF2D55',
+					'text': '#1D1D1F',
+					'overlay': '#00000080',
 				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				sm: 'calc(var(--radius) - 4px)',
+				'apple': '12px', // Apple's signature 12px radius
 			},
 			keyframes: {
 				'accordion-down': {
@@ -106,12 +108,23 @@ export default {
 				'float': 'float 5s ease-in-out infinite'
 			},
 			fontFamily: {
-				'sans': ['Inter', 'sans-serif'],
+				'sans': ['-apple-system', 'BlinkMacSystemFont', 'San Francisco', 'Segoe UI', 'Roboto', 'Inter', 'sans-serif'],
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
 				'hero-pattern': 'linear-gradient(to right bottom, #8B5CF6, #3B82F6, #06B6D4)',
-			}
+				'apple-metallic': 'linear-gradient(145deg, #E0E0E0, #F5F5F7)',
+			},
+			boxShadow: {
+				'apple': '0 2px 10px rgba(0, 0, 0, 0.1)',
+				'apple-hover': '0 4px 20px rgba(0, 0, 0, 0.15)',
+			},
+			padding: {
+				'apple': '1.5rem', // 1.5x default padding
+			},
+			spacing: {
+				'apple': '8px', // 8px grid alignment
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

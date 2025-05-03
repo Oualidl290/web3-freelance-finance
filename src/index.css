@@ -8,34 +8,34 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 240 10% 3.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 10% 3.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 240 10% 3.9%;
 
-    --primary: 262 83% 58%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 211.7 100% 53.9%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 262 83% 58%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 211.7 100% 53.9%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 58%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 211.7 100% 53.9%;
 
-    --radius: 0.5rem;
+    --radius: 12px;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -48,33 +48,33 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 262 83% 58%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 211.7 100% 53.9%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
 
-    --accent: 262 83% 58%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 211.7 100% 53.9%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 262 83% 58%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 211.7 100% 53.9%;
     
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -93,7 +93,11 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-apple-primary text-apple-text font-sans;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
   }
 }
 
@@ -102,11 +106,89 @@
 }
 
 .card-hover {
-  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  @apply transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-0.5;
 }
 
 .wave-bg {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%238B5CF6' fill-opacity='0.1' d='M0,128L48,144C96,160,192,192,288,197.3C384,203,480,181,576,181.3C672,181,768,203,864,208C960,213,1056,203,1152,181.3C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
   background-size: cover;
   background-position: bottom;
+}
+
+/* Apple-style design classes */
+.apple-card {
+  @apply bg-apple-primary rounded-apple shadow-apple border border-apple-secondary;
+}
+
+.apple-button {
+  @apply bg-apple-accent1 text-white font-medium px-5 py-2 rounded-full transition-all duration-200 hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-apple-accent1 focus:ring-opacity-50;
+}
+
+.apple-button-secondary {
+  @apply bg-apple-secondary text-apple-text font-medium px-5 py-2 rounded-full transition-all duration-200 hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-apple-text focus:ring-opacity-20;
+}
+
+.apple-button-success {
+  @apply bg-apple-accent2 text-white font-medium px-5 py-2 rounded-full transition-all duration-200 hover:bg-opacity-90;
+}
+
+.apple-button-danger {
+  @apply bg-apple-accent3 text-white font-medium px-5 py-2 rounded-full transition-all duration-200 hover:bg-opacity-90;
+}
+
+.apple-input {
+  @apply bg-apple-secondary border-0 rounded-lg px-4 py-3 text-apple-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-accent1;
+}
+
+.apple-shadow {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.apple-grid {
+  display: grid;
+  grid-gap: 8px;
+}
+
+/* 8px grid alignment */
+.p-apple {
+  padding: 8px;
+}
+
+.m-apple {
+  margin: 8px;
+}
+
+.px-apple {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.py-apple {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.mx-apple {
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.my-apple {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+/* 1.5x default padding for airy spacing */
+.p-apple-airy {
+  padding: 1.5rem;
+}
+
+.px-apple-airy {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.py-apple-airy {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 }

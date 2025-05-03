@@ -10,6 +10,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CreateInvoice from "./pages/CreateInvoice";
+import Payments from "./pages/Payments";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +34,16 @@ const App = () => (
             <Route path="/create-invoice" element={
               <PrivateRoute>
                 <CreateInvoice />
+              </PrivateRoute>
+            } />
+            <Route path="/payments" element={
+              <PrivateRoute>
+                <Payments />
+              </PrivateRoute>
+            } />
+            <Route path="/analytics" element={
+              <PrivateRoute>
+                <Analytics />
               </PrivateRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
