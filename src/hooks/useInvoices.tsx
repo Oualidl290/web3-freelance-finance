@@ -76,22 +76,26 @@ export function useInvoices() {
     mutationFn: async (newInvoice: CreateInvoiceInput) => {
       if (!user) throw new Error("User not authenticated");
       
+      // The issue is here - we need to match the exact structure Supabase expects
+      // Let's transform our input data to match what Supabase expects
+      const invoiceData = {
+        title: newInvoice.title,
+        description: newInvoice.description,
+        amount: newInvoice.amount,
+        currency: newInvoice.currency || "USD",
+        crypto_amount: newInvoice.crypto_amount,
+        crypto_currency: newInvoice.crypto_currency,
+        status: newInvoice.status || "draft",
+        escrow_enabled: newInvoice.escrow_enabled || false,
+        escrow_days: newInvoice.escrow_days,
+        due_date: newInvoice.due_date,
+        client_id: newInvoice.client_id,
+        user_id: user.id,
+      };
+      
       const { data, error } = await supabase
         .from("invoices")
-        .insert({
-          title: newInvoice.title,
-          description: newInvoice.description,
-          amount: newInvoice.amount,
-          currency: newInvoice.currency || "USD",
-          crypto_amount: newInvoice.crypto_amount,
-          crypto_currency: newInvoice.crypto_currency,
-          status: newInvoice.status || "draft",
-          escrow_enabled: newInvoice.escrow_enabled || false,
-          escrow_days: newInvoice.escrow_days,
-          due_date: newInvoice.due_date,
-          client_id: newInvoice.client_id,
-          user_id: user.id,
-        })
+        .insert(invoiceData)
         .select(`
           *,
           client:client_id (
