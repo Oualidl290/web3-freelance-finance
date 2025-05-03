@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -141,7 +140,7 @@ const InvoiceCreationForm = () => {
       // Create invoice
       const totalAmount = parseFloat(calculateTotal());
       
-      // Use our new CreateInvoiceInput type
+      // Use our updated CreateInvoiceInput type
       const invoiceData: CreateInvoiceInput = {
         title: title || `Invoice for ${clientName || clientEmail || clientWallet}`,
         description,
@@ -153,7 +152,7 @@ const InvoiceCreationForm = () => {
         due_date: dueDate?.toISOString(),
         escrow_enabled: enableEscrow,
         escrow_days: enableEscrow ? parseInt(escrowDays) : null,
-        crypto_amount: null // Add this missing field
+        crypto_amount: null
       };
       
       await createInvoice.mutateAsync(invoiceData);
