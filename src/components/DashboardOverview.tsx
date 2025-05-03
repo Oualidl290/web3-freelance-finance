@@ -33,7 +33,7 @@ const DashboardOverview = () => {
           </p>
         </div>
         <Link to="/create-invoice">
-          <Button className="bg-gradient-to-r from-web3-purple to-web3-blue text-white">
+          <Button className="bg-gradient-to-r from-apple-accent1 to-apple-accent1/80 text-white">
             <Plus className="mr-2 h-4 w-4" /> Create Invoice
           </Button>
         </Link>

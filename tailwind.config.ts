@@ -72,6 +72,12 @@ export default {
 					'accent3': '#FF2D55',
 					'text': '#1D1D1F',
 					'overlay': '#00000080',
+				},
+				// Web3 gradient colors
+				web3: {
+					'purple': '#8B5CF6',
+					'blue': '#3B82F6',
+					'teal': '#06B6D4',
 				}
 			},
 			borderRadius: {

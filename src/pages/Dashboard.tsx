@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -66,7 +65,7 @@ const Dashboard = () => {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[600px] rounded-apple border-apple-secondary">
-                  <InvoiceDialog onClose={() => setIsDialogOpen(false)} />
+                  <InvoiceDialog />
                 </DialogContent>
               </Dialog>
             </div>
