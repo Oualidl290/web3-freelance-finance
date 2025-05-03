@@ -58,16 +58,31 @@ export function useInvoices() {
   });
   
   const createInvoice = useMutation({
-    mutationFn: async (newInvoice: Omit<Invoice, "id" | "invoice_number" | "created_at" | "updated_at">) => {
+    mutationFn: async (newInvoice: Omit<Invoice, "id" | "invoice_number" | "created_at" | "updated_at"> & { client_id?: string }) => {
       if (!user) throw new Error("User not authenticated");
       
       const { data, error } = await supabase
         .from("invoices")
         .insert({
-          ...newInvoice,
+          title: newInvoice.title,
+          description: newInvoice.description,
+          amount: newInvoice.amount,
+          currency: newInvoice.currency,
+          crypto_amount: newInvoice.crypto_amount,
+          crypto_currency: newInvoice.crypto_currency,
+          status: newInvoice.status,
+          escrow_enabled: newInvoice.escrow_enabled,
+          escrow_days: newInvoice.escrow_days,
+          due_date: newInvoice.due_date,
+          client_id: newInvoice.client_id,
           user_id: user.id,
         })
-        .select();
+        .select(`
+          *,
+          client:client_id (
+            id, name, email, wallet_address, client_type
+          )
+        `);
         
       if (error) throw error;
       return data[0] as Invoice;
@@ -97,7 +112,12 @@ export function useInvoices() {
         .from("invoices")
         .update({ status, updated_at: new Date().toISOString() })
         .eq("id", id)
-        .select();
+        .select(`
+          *,
+          client:client_id (
+            id, name, email, wallet_address, client_type
+          )
+        `);
         
       if (error) throw error;
       return data[0] as Invoice;
@@ -131,7 +151,12 @@ export function useInvoices() {
           updated_at: new Date().toISOString()
         })
         .eq("id", id)
-        .select();
+        .select(`
+          *,
+          client:client_id (
+            id, name, email, wallet_address, client_type
+          )
+        `);
         
       if (error) throw error;
       return data[0] as Invoice;
