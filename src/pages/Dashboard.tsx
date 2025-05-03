@@ -1,31 +1,20 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import DashboardOverview from "@/components/DashboardOverview";
 import WalletConnect from "@/components/WalletConnect";
 import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import DashboardLayout, { DashboardTab } from "@/components/dashboard/DashboardLayout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import InvoiceDialog from "@/components/InvoiceDialog";
-import DashboardSidebar from "@/components/DashboardSidebar";
-import { 
-  FileText, 
-  Plus, 
-  Wallet, 
-  Settings, 
-  Activity, 
-  CreditCard,
-  BarChart3,
-  Clock,
-  Loader2 
-} from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user, isLoading } = useAuth();
 
@@ -71,21 +60,15 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-apple-secondary">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <NavBar />
       
-      <div className="flex-1">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-medium tracking-tight text-apple-text">Dashboard</h1>
-              <p className="text-gray-500 mt-1">
-                Manage your invoices, payments, and financial activity
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-3">
+      <div className="flex-1 py-6">
+        <DashboardLayout activeTab={activeTab} setActiveTab={setActiveTab}>
+          {/* Main Content Area */}
+          <div className="space-y-6">
+            {/* Test Mode Badge */}
+            <div className="flex justify-end">
               <div className="relative">
                 <Button 
                   variant="outline" 
@@ -99,260 +82,96 @@ const Dashboard = () => {
                   <span className="ml-1">Test Mode</span>
                 </Button>
               </div>
-              
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    className="bg-apple-accent1 hover:bg-apple-accent1/90 text-white rounded-full shadow-apple"
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> New Invoice
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px] rounded-apple border-apple-secondary">
-                  <InvoiceDialog />
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-9">
-              <div className="apple-card p-apple-airy rounded-apple mb-8">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                  <TabsList className="bg-apple-secondary p-1 flex w-full overflow-x-auto no-scrollbar rounded-full">
-                    <TabsTrigger 
-                      value="overview" 
-                      className="flex items-center gap-2 rounded-full data-[state=active]:bg-white data-[state=active]:text-apple-text data-[state=active]:shadow-apple"
-                    >
-                      <Activity className="h-4 w-4" />
-                      <span>Overview</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="invoices" 
-                      className="flex items-center gap-2 rounded-full data-[state=active]:bg-white data-[state=active]:text-apple-text data-[state=active]:shadow-apple"
-                    >
-                      <FileText className="h-4 w-4" />
-                      <span>Invoices</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="wallet" 
-                      className="flex items-center gap-2 rounded-full data-[state=active]:bg-white data-[state=active]:text-apple-text data-[state=active]:shadow-apple"
-                    >
-                      <Wallet className="h-4 w-4" />
-                      <span>Wallet</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="payments" 
-                      className="flex items-center gap-2 rounded-full data-[state=active]:bg-white data-[state=active]:text-apple-text data-[state=active]:shadow-apple"
-                    >
-                      <CreditCard className="h-4 w-4" />
-                      <span>Payments</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="analytics" 
-                      className="flex items-center gap-2 rounded-full data-[state=active]:bg-white data-[state=active]:text-apple-text data-[state=active]:shadow-apple"
-                    >
-                      <BarChart3 className="h-4 w-4" />
-                      <span>Analytics</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="settings" 
-                      className="flex items-center gap-2 rounded-full data-[state=active]:bg-white data-[state=active]:text-apple-text data-[state=active]:shadow-apple"
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span>Settings</span>
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="overview" className="space-y-4">
-                    <DashboardOverview />
-                  </TabsContent>
-                  
-                  <TabsContent value="invoices" className="space-y-4">
-                    <div className="space-y-4">
-                      <div>
-                        <h2 className="text-2xl font-medium text-apple-text">All Invoices</h2>
-                        <p className="text-gray-500 mt-1">
-                          View and manage all your invoices in one place
-                        </p>
-                      </div>
-                      
-                      <div className="bg-white rounded-apple shadow-apple border border-apple-secondary p-6">
-                        <div className="flex justify-between items-center mb-4">
-                          <div className="flex gap-4">
-                            <Button variant="outline" className="rounded-full text-sm">All Invoices</Button>
-                            <Button variant="outline" className="rounded-full text-sm">Pending</Button>
-                            <Button variant="outline" className="rounded-full text-sm">Paid</Button>
-                          </div>
-                          <Button 
-                            onClick={() => setIsDialogOpen(true)}
-                            className="bg-apple-accent1 hover:bg-apple-accent1/90 text-white rounded-full"
-                          >
-                            <Plus className="mr-2 h-4 w-4" /> Create Invoice
-                          </Button>
-                        </div>
-                        
-                        <div className="space-y-4">
-                          <Skeleton className="h-12 w-full" />
-                          <Skeleton className="h-12 w-full" />
-                          <Skeleton className="h-12 w-full" />
-                          <p className="text-center text-gray-500 py-4">
-                            Loading invoices...
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="wallet">
-                    <div className="space-y-6">
-                      <div>
-                        <h2 className="text-2xl font-medium text-apple-text">Wallet Management</h2>
-                        <p className="text-gray-500 mt-1">
-                          Connect and manage your crypto wallets for receiving payments
-                        </p>
-                      </div>
-                      
-                      <WalletConnect />
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="payments">
-                    <div className="space-y-6">
-                      <div>
-                        <h2 className="text-2xl font-medium text-apple-text">Payment History</h2>
-                        <p className="text-gray-500 mt-1">
-                          Track all your incoming payments and transactions
-                        </p>
-                      </div>
-                      
-                      <div className="bg-white rounded-apple shadow-apple border border-apple-secondary p-6">
-                        <div className="flex justify-between items-center mb-6">
-                          <div className="flex gap-4">
-                            <Button variant="outline" className="rounded-full text-sm">All Payments</Button>
-                            <Button variant="outline" className="rounded-full text-sm">Received</Button>
-                            <Button variant="outline" className="rounded-full text-sm">Pending</Button>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Clock className="h-4 w-4 mr-1" /> Last 30 days
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-4">
-                          <Skeleton className="h-12 w-full" />
-                          <Skeleton className="h-12 w-full" />
-                          <Skeleton className="h-12 w-full" />
-                          <p className="text-center text-gray-500 py-4">
-                            Loading payment history...
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="analytics">
-                    <div className="space-y-6">
-                      <div>
-                        <h2 className="text-2xl font-medium text-apple-text">Analytics Dashboard</h2>
-                        <p className="text-gray-500 mt-1">
-                          Track your business performance with detailed analytics
-                        </p>
-                      </div>
-                      
-                      <div className="bg-white rounded-apple shadow-apple border border-apple-secondary p-6 text-center">
-                        <img 
-                          src="/placeholder.svg" 
-                          alt="Analytics" 
-                          className="mx-auto h-40 w-auto mb-4 opacity-50"
-                        />
-                        <h3 className="text-xl font-medium text-apple-text mb-2">Analytics Coming Soon</h3>
-                        <p className="text-gray-500 mb-4">
-                          Detailed analytics will be available soon to help you track your business performance.
-                        </p>
-                        <Button 
-                          className="bg-apple-accent1 hover:bg-apple-accent1/90 text-white rounded-full"
-                        >
-                          Upgrade to Pro
-                        </Button>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="settings">
-                    <div className="space-y-6">
-                      <div>
-                        <h2 className="text-2xl font-medium text-apple-text">Account Settings</h2>
-                        <p className="text-gray-500 mt-1">
-                          Manage your account preferences and notification settings
-                        </p>
-                      </div>
-                      
-                      <div className="bg-white rounded-apple shadow-apple border border-apple-secondary p-6">
-                        <div className="space-y-6">
-                          <div>
-                            <h3 className="text-lg font-medium text-apple-text mb-4">General Settings</h3>
-                            <div className="space-y-4">
-                              <div>
-                                <label className="block text-sm font-medium text-apple-text mb-1">
-                                  Email Notifications
-                                </label>
-                                <select className="apple-input w-full">
-                                  <option>All notifications</option>
-                                  <option>Important only</option>
-                                  <option>None</option>
-                                </select>
-                              </div>
-                              
-                              <div>
-                                <label className="block text-sm font-medium text-apple-text mb-1">
-                                  Default Currency
-                                </label>
-                                <select className="apple-input w-full">
-                                  <option>USD</option>
-                                  <option>EUR</option>
-                                  <option>ETH</option>
-                                  <option>USDC</option>
-                                </select>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="pt-4 border-t border-apple-secondary">
-                            <h3 className="text-lg font-medium text-apple-text mb-4">Business Profile</h3>
-                            <div className="space-y-4">
-                              <div>
-                                <label className="block text-sm font-medium text-apple-text mb-1">
-                                  Business Name
-                                </label>
-                                <input type="text" placeholder="Enter business name" className="apple-input w-full" />
-                              </div>
-                              
-                              <div>
-                                <label className="block text-sm font-medium text-apple-text mb-1">
-                                  Business Address
-                                </label>
-                                <textarea placeholder="Enter business address" className="apple-input w-full"></textarea>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
             </div>
             
-            {/* Sidebar */}
-            <div className="lg:col-span-3">
-              <DashboardSidebar setIsDialogOpen={setIsDialogOpen} setActiveTab={setActiveTab} />
-            </div>
+            {/* Tab Content */}
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DashboardTab)}>
+              <TabsContent value="overview" className="m-0">
+                <DashboardOverview />
+              </TabsContent>
+              
+              <TabsContent value="wallet" className="m-0">
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h2 className="text-2xl font-bold mb-4">Wallet Management</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Connect and manage your crypto wallets for receiving payments
+                  </p>
+                  <WalletConnect />
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="analytics" className="m-0">
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h2 className="text-2xl font-bold mb-4">Analytics Dashboard</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Track your business performance with detailed analytics
+                  </p>
+                  
+                  <div className="text-center py-8">
+                    <img 
+                      src="/placeholder.svg" 
+                      alt="Analytics" 
+                      className="mx-auto h-40 w-auto mb-4 opacity-50"
+                    />
+                    <h3 className="text-xl font-medium mb-2">Analytics Coming Soon</h3>
+                    <p className="text-gray-500 mb-4">
+                      Detailed analytics will be available soon to help you track your business performance.
+                    </p>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="settings" className="m-0">
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h2 className="text-2xl font-bold mb-4">Account Settings</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Manage your account preferences and notification settings
+                  </p>
+                  
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-medium mb-4">General Settings</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Email Notifications
+                          </label>
+                          <select className="w-full rounded-md border border-gray-300 p-2">
+                            <option>All notifications</option>
+                            <option>Important only</option>
+                            <option>None</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Default Currency
+                          </label>
+                          <select className="w-full rounded-md border border-gray-300 p-2">
+                            <option>USD</option>
+                            <option>EUR</option>
+                            <option>ETH</option>
+                            <option>USDC</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
-        </div>
+        </DashboardLayout>
       </div>
       
       <Footer />
+      
+      {/* Create Invoice Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] rounded-lg">
+          <InvoiceDialog />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
