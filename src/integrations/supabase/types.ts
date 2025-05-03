@@ -9,6 +9,77 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      attachments: {
+        Row: {
+          content_type: string
+          created_at: string | null
+          file_name: string
+          file_size: number
+          id: string
+          invoice_id: string | null
+          storage_path: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string | null
+          file_name: string
+          file_size: number
+          id?: string
+          invoice_id?: string | null
+          storage_path: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string | null
+          file_name?: string
+          file_size?: number
+          id?: string
+          invoice_id?: string | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          client_type: Database["public"]["Enums"]["client_type"]
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          updated_at: string | null
+          user_id: string
+          wallet_address: string | null
+        }
+        Insert: {
+          client_type: Database["public"]["Enums"]["client_type"]
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          updated_at?: string | null
+          user_id: string
+          wallet_address?: string | null
+        }
+        Update: {
+          client_type?: Database["public"]["Enums"]["client_type"]
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          updated_at?: string | null
+          user_id?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           business_type: string
@@ -41,6 +112,112 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      invoice_views: {
+        Row: {
+          id: string
+          invoice_id: string | null
+          ip_address: string | null
+          location: string | null
+          user_agent: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          invoice_id?: string | null
+          ip_address?: string | null
+          location?: string | null
+          user_agent?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          invoice_id?: string | null
+          ip_address?: string | null
+          location?: string | null
+          user_agent?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_views_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount: number
+          client_id: string | null
+          created_at: string | null
+          crypto_amount: number | null
+          crypto_currency: Database["public"]["Enums"]["wallet_type"] | null
+          currency: string | null
+          description: string | null
+          due_date: string | null
+          escrow_days: number | null
+          escrow_enabled: boolean | null
+          escrow_release_date: string | null
+          id: string
+          invoice_number: string
+          payment_date: string | null
+          status: Database["public"]["Enums"]["invoice_status"] | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          client_id?: string | null
+          created_at?: string | null
+          crypto_amount?: number | null
+          crypto_currency?: Database["public"]["Enums"]["wallet_type"] | null
+          currency?: string | null
+          description?: string | null
+          due_date?: string | null
+          escrow_days?: number | null
+          escrow_enabled?: boolean | null
+          escrow_release_date?: string | null
+          id?: string
+          invoice_number: string
+          payment_date?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"] | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          client_id?: string | null
+          created_at?: string | null
+          crypto_amount?: number | null
+          crypto_currency?: Database["public"]["Enums"]["wallet_type"] | null
+          currency?: string | null
+          description?: string | null
+          due_date?: string | null
+          escrow_days?: number | null
+          escrow_enabled?: boolean | null
+          escrow_release_date?: string | null
+          id?: string
+          invoice_number?: string
+          payment_date?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"] | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       link_views: {
         Row: {
@@ -146,6 +323,92 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: Database["public"]["Enums"]["wallet_type"]
+          destination_address: string | null
+          fee: number | null
+          id: string
+          invoice_id: string | null
+          status: string | null
+          transaction_hash: string | null
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency: Database["public"]["Enums"]["wallet_type"]
+          destination_address?: string | null
+          fee?: number | null
+          id?: string
+          invoice_id?: string | null
+          status?: string | null
+          transaction_hash?: string | null
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: Database["public"]["Enums"]["wallet_type"]
+          destination_address?: string | null
+          fee?: number | null
+          id?: string
+          invoice_id?: string | null
+          status?: string | null
+          transaction_hash?: string | null
+          transaction_type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          balance: number | null
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          updated_at: string | null
+          user_id: string
+          wallet_address: string
+          wallet_type: Database["public"]["Enums"]["wallet_type"]
+        }
+        Insert: {
+          balance?: number | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          wallet_address: string
+          wallet_type: Database["public"]["Enums"]["wallet_type"]
+        }
+        Update: {
+          balance?: number | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          wallet_address?: string
+          wallet_type?: Database["public"]["Enums"]["wallet_type"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -157,7 +420,17 @@ export type Database = {
       }
     }
     Enums: {
+      client_type: "wallet" | "email"
+      invoice_status:
+        | "draft"
+        | "pending"
+        | "paid"
+        | "escrow_held"
+        | "escrow_released"
+        | "canceled"
       subscription_tier: "free" | "pro" | "business"
+      transaction_type: "payment" | "withdrawal" | "escrow_release" | "fee"
+      wallet_type: "eth" | "usdc"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -273,7 +546,18 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      client_type: ["wallet", "email"],
+      invoice_status: [
+        "draft",
+        "pending",
+        "paid",
+        "escrow_held",
+        "escrow_released",
+        "canceled",
+      ],
       subscription_tier: ["free", "pro", "business"],
+      transaction_type: ["payment", "withdrawal", "escrow_release", "fee"],
+      wallet_type: ["eth", "usdc"],
     },
   },
 } as const

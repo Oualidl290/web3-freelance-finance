@@ -13,8 +13,16 @@ import CreateInvoice from "./pages/CreateInvoice";
 import Payments from "./pages/Payments";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
+import InvoiceDetail from "./pages/InvoiceDetail";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -34,6 +42,11 @@ const App = () => (
             <Route path="/create-invoice" element={
               <PrivateRoute>
                 <CreateInvoice />
+              </PrivateRoute>
+            } />
+            <Route path="/invoices/:id" element={
+              <PrivateRoute>
+                <InvoiceDetail />
               </PrivateRoute>
             } />
             <Route path="/payments" element={

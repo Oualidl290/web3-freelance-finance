@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,22 +10,65 @@ import WalletConnect from "@/components/WalletConnect";
 import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import InvoiceDialog from "@/components/InvoiceDialog";
+import DashboardSidebar from "@/components/DashboardSidebar";
 import { 
   FileText, 
   Plus, 
   Wallet, 
   Settings, 
   Activity, 
-  ChevronRight,
   CreditCard,
   BarChart3,
-  Clock
+  Clock,
+  Loader2 
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-apple-secondary">
+        <NavBar />
+        
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 mx-auto animate-spin text-apple-accent1" />
+            <p className="mt-4 text-lg">Loading your dashboard...</p>
+          </div>
+        </div>
+        
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col bg-apple-secondary">
+        <NavBar />
+        
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-md px-4">
+            <h1 className="text-3xl font-bold mb-4">Sign In Required</h1>
+            <p className="mb-6 text-muted-foreground">
+              Please sign in to access your dashboard and manage your invoices.
+            </p>
+            <Link to="/auth">
+              <Button className="bg-apple-accent1 hover:bg-apple-accent1/90 text-white rounded-full">
+                Sign In
+              </Button>
+            </Link>
+          </div>
+        </div>
+        
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-apple-secondary">
@@ -149,9 +193,14 @@ const Dashboard = () => {
                           </Button>
                         </div>
                         
-                        <p className="text-center text-gray-500 py-8">
-                          No invoices found. Create your first invoice to get started.
-                        </p>
+                        <div className="space-y-4">
+                          <Skeleton className="h-12 w-full" />
+                          <Skeleton className="h-12 w-full" />
+                          <Skeleton className="h-12 w-full" />
+                          <p className="text-center text-gray-500 py-4">
+                            Loading invoices...
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </TabsContent>
@@ -190,9 +239,14 @@ const Dashboard = () => {
                           </div>
                         </div>
                         
-                        <p className="text-center text-gray-500 py-8">
-                          No payment history found. Payments will appear here once you receive them.
-                        </p>
+                        <div className="space-y-4">
+                          <Skeleton className="h-12 w-full" />
+                          <Skeleton className="h-12 w-full" />
+                          <Skeleton className="h-12 w-full" />
+                          <p className="text-center text-gray-500 py-4">
+                            Loading payment history...
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </TabsContent>
@@ -292,87 +346,7 @@ const Dashboard = () => {
             
             {/* Sidebar */}
             <div className="lg:col-span-3">
-              {/* Quick Actions */}
-              <div className="apple-card p-6 rounded-apple mb-6">
-                <h3 className="text-lg font-medium text-apple-text mb-4">Quick Actions</h3>
-                <div className="space-y-3">
-                  <Button 
-                    onClick={() => setIsDialogOpen(true)}
-                    className="w-full justify-start text-left bg-apple-accent1 hover:bg-apple-accent1/90 text-white rounded-full"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Invoice
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-between text-left rounded-full border border-apple-secondary hover:bg-apple-secondary"
-                    onClick={() => setActiveTab("invoices")}
-                  >
-                    <span className="flex items-center">
-                      <FileText className="mr-2 h-4 w-4" />
-                      View Invoices
-                    </span>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-between text-left rounded-full border border-apple-secondary hover:bg-apple-secondary"
-                    onClick={() => setActiveTab("wallet")}
-                  >
-                    <span className="flex items-center">
-                      <Wallet className="mr-2 h-4 w-4" />
-                      Connect Wallet
-                    </span>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-between text-left rounded-full border border-apple-secondary hover:bg-apple-secondary"
-                    onClick={() => setActiveTab("payments")}
-                  >
-                    <span className="flex items-center">
-                      <CreditCard className="mr-2 h-4 w-4" />
-                      View Payments
-                    </span>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Pro Plan */}
-              <div className="apple-card rounded-apple p-6 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-apple-accent1/5 to-apple-accent1/20 z-0"></div>
-                <div className="relative z-10">
-                  <h3 className="text-lg font-medium text-apple-text mb-3">Pro Plan</h3>
-                  <p className="text-sm text-gray-600 mb-4">Upgrade for advanced features and higher limits</p>
-                  <ul className="text-sm text-gray-600 mb-4 space-y-2">
-                    <li className="flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-apple-accent2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                      Unlimited invoices
-                    </li>
-                    <li className="flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-apple-accent2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                      Advanced analytics
-                    </li>
-                    <li className="flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-apple-accent2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                      Priority support
-                    </li>
-                  </ul>
-                  <Button className="w-full bg-apple-accent1 hover:bg-apple-accent1/90 text-white rounded-full">
-                    Upgrade Now
-                  </Button>
-                </div>
-              </div>
+              <DashboardSidebar setIsDialogOpen={setIsDialogOpen} setActiveTab={setActiveTab} />
             </div>
           </div>
         </div>

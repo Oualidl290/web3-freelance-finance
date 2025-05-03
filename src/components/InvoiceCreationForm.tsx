@@ -1,28 +1,43 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { CalendarIcon, PlusCircle, Trash2 } from "lucide-react";
+import { CalendarIcon, PlusCircle, Trash2, Loader2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useInvoices } from "@/hooks/useInvoices";
+import { useClients } from "@/hooks/useClients";
+import { useNavigate } from "react-router-dom";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const InvoiceCreationForm = () => {
   const [clientEmail, setClientEmail] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [clientWallet, setClientWallet] = useState("");
+  const [clientType, setClientType] = useState<"email" | "wallet">("email");
+  const [title, setTitle] = useState("");
   const [invoiceAmount, setInvoiceAmount] = useState("");
   const [currency, setCurrency] = useState("USDC");
-  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [dueDate, setDueDate] = useState<Date | undefined>(addDays(new Date(), 7));
   const [description, setDescription] = useState("");
   const [enableEscrow, setEnableEscrow] = useState(true);
+  const [escrowDays, setEscrowDays] = useState("7");
   const [items, setItems] = useState([{ description: "", amount: "" }]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
+  
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { createInvoice } = useInvoices();
+  const { clients, createClient } = useClients();
   
   const addItem = () => {
     setItems([...items, { description: "", amount: "" }]);
@@ -51,32 +66,113 @@ const InvoiceCreationForm = () => {
       return total + (parseFloat(item.amount) || 0);
     }, 0).toFixed(2);
   };
+
+  // Update form based on selected client
+  useEffect(() => {
+    if (selectedClientId && clients) {
+      const selectedClient = clients.find(client => client.id === selectedClientId);
+      if (selectedClient) {
+        if (selectedClient.email) {
+          setClientEmail(selectedClient.email);
+          setClientType("email");
+        }
+        if (selectedClient.wallet_address) {
+          setClientWallet(selectedClient.wallet_address);
+          setClientType("wallet");
+        }
+        if (selectedClient.name) {
+          setClientName(selectedClient.name);
+        }
+      }
+    }
+  }, [selectedClientId, clients]);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
-    // Validate form
-    if (!clientEmail || !dueDate || items.some(item => !item.description || !item.amount)) {
+    try {
+      // Validate form
+      if (!dueDate || items.some(item => !item.description || !item.amount)) {
+        toast({
+          title: "Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      let clientId = selectedClientId;
+      
+      // If no client is selected, create a new one
+      if (!clientId) {
+        if (clientType === "email" && !clientEmail) {
+          toast({
+            title: "Error",
+            description: "Please enter client email",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+        
+        if (clientType === "wallet" && !clientWallet) {
+          toast({
+            title: "Error",
+            description: "Please enter client wallet address",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // Create new client
+        const newClient = await createClient.mutateAsync({
+          name: clientName,
+          email: clientType === "email" ? clientEmail : null,
+          wallet_address: clientType === "wallet" ? clientWallet : null,
+          client_type: clientType
+        });
+        
+        clientId = newClient.id;
+      }
+      
+      // Create invoice
+      const totalAmount = parseFloat(calculateTotal());
+      
+      await createInvoice.mutateAsync({
+        title: title || `Invoice for ${clientName || clientEmail || clientWallet}`,
+        description,
+        amount: totalAmount,
+        currency: "USD",
+        crypto_currency: currency === "USDC" ? "usdc" : "eth",
+        status: "draft",
+        client_id: clientId,
+        due_date: dueDate?.toISOString(),
+        escrow_enabled: enableEscrow,
+        escrow_days: enableEscrow ? parseInt(escrowDays) : null
+      });
+      
+      // Show success notification
+      toast({
+        title: "Invoice Created",
+        description: "Your invoice has been created successfully",
+      });
+      
+      // Redirect to invoices list
+      navigate("/dashboard");
+      
+    } catch (error) {
+      console.error("Error creating invoice:", error);
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Failed to create invoice. Please try again.",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Show success notification
-    toast({
-      title: "Invoice Created",
-      description: "Your invoice has been created and sent to the client",
-    });
-    
-    // Reset form
-    setClientEmail("");
-    setInvoiceAmount("");
-    setDueDate(undefined);
-    setDescription("");
-    setItems([{ description: "", amount: "" }]);
   };
 
   return (
@@ -90,18 +186,91 @@ const InvoiceCreationForm = () => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Client Type</Label>
+              <RadioGroup defaultValue={clientType} onValueChange={(value) => setClientType(value as "email" | "wallet")} className="flex space-x-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="email" id="email" />
+                  <Label htmlFor="email">Email</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="wallet" id="wallet" />
+                  <Label htmlFor="wallet">Wallet Address</Label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            {clients.length > 0 && (
               <div className="space-y-2">
-                <Label htmlFor="clientEmail">Client Email</Label>
+                <Label htmlFor="existingClient">Select Existing Client (Optional)</Label>
+                <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a client" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Clients</SelectLabel>
+                      {clients.map(client => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.name || client.email || client.wallet_address || "Unnamed Client"}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {clientType === "email" && (
+                <div className="space-y-2">
+                  <Label htmlFor="clientEmail">Client Email</Label>
+                  <Input
+                    id="clientEmail"
+                    placeholder="client@example.com"
+                    value={clientEmail}
+                    onChange={(e) => setClientEmail(e.target.value)}
+                    disabled={!!selectedClientId}
+                  />
+                </div>
+              )}
+              
+              {clientType === "wallet" && (
+                <div className="space-y-2">
+                  <Label htmlFor="clientWallet">Client Wallet Address</Label>
+                  <Input
+                    id="clientWallet"
+                    placeholder="0x..."
+                    value={clientWallet}
+                    onChange={(e) => setClientWallet(e.target.value)}
+                    disabled={!!selectedClientId}
+                  />
+                </div>
+              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="clientName">Client Name (Optional)</Label>
                 <Input
-                  id="clientEmail"
-                  placeholder="client@example.com"
-                  value={clientEmail}
-                  onChange={(e) => setClientEmail(e.target.value)}
-                  required
+                  id="clientName"
+                  placeholder="Client Name"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  disabled={!!selectedClientId}
                 />
               </div>
-              
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="title">Invoice Title</Label>
+              <Input
+                id="title"
+                placeholder="Project work"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="currency">Currency</Label>
                 <Select value={currency} onValueChange={setCurrency}>
@@ -111,13 +280,10 @@ const InvoiceCreationForm = () => {
                   <SelectContent>
                     <SelectItem value="USDC">USDC</SelectItem>
                     <SelectItem value="ETH">ETH</SelectItem>
-                    <SelectItem value="BTC">BTC</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
               <div className="space-y-2">
                 <Label htmlFor="dueDate">Due Date</Label>
                 <Popover>
@@ -139,24 +305,38 @@ const InvoiceCreationForm = () => {
                       selected={dueDate}
                       onSelect={setDueDate}
                       initialFocus
+                      disabled={(date) => date < new Date()}
                     />
                   </PopoverContent>
                 </Popover>
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="escrow">Enable Escrow</Label>
-                  <Switch 
-                    id="escrow" 
-                    checked={enableEscrow} 
-                    onCheckedChange={setEnableEscrow} 
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="escrow">Enable Escrow</Label>
+                <Switch 
+                  id="escrow" 
+                  checked={enableEscrow} 
+                  onCheckedChange={setEnableEscrow} 
+                />
+              </div>
+              {enableEscrow && (
+                <div className="mt-2">
+                  <Label htmlFor="escrowDays">Escrow Period (Days)</Label>
+                  <Input
+                    id="escrowDays"
+                    type="number"
+                    min="1"
+                    value={escrowDays}
+                    onChange={(e) => setEscrowDays(e.target.value)}
+                    className="w-full mt-1"
                   />
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Client funds will be held in escrow until you mark the work as complete.
-                </p>
-              </div>
+              )}
+              <p className="text-sm text-muted-foreground">
+                {enableEscrow ? "Client funds will be held in escrow until you mark the work as complete." : "Funds will be available for withdrawal immediately after payment."}
+              </p>
             </div>
             
             <div className="space-y-2">
@@ -220,18 +400,28 @@ const InvoiceCreationForm = () => {
               
               <div className="flex justify-end text-lg font-semibold">
                 <span className="mr-2">Total:</span>
-                <span>{calculateTotal()} {currency}</span>
+                <span>{calculateTotal()} USD ({currency})</span>
               </div>
             </div>
           </div>
           
           <div className="flex justify-end space-x-2">
-            <Button variant="outline">Save Draft</Button>
+            <Button variant="outline" type="button" onClick={() => navigate("/dashboard")}>
+              Cancel
+            </Button>
             <Button 
               type="submit" 
-              className="bg-gradient-to-r from-web3-purple to-web3-blue text-white"
+              className="bg-gradient-to-r from-apple-accent1 to-apple-accent1/80 text-white"
+              disabled={isSubmitting}
             >
-              Create and Send Invoice
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>Create Invoice</>
+              )}
             </Button>
           </div>
         </form>
