@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import { format, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useInvoices } from "@/hooks/useInvoices";
+import { useInvoices, CreateInvoiceInput } from "@/hooks/useInvoices";
 import { useClients } from "@/hooks/useClients";
 import { useNavigate } from "react-router-dom";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -140,7 +141,8 @@ const InvoiceCreationForm = () => {
       // Create invoice
       const totalAmount = parseFloat(calculateTotal());
       
-      await createInvoice.mutateAsync({
+      // Use our new CreateInvoiceInput type
+      const invoiceData: CreateInvoiceInput = {
         title: title || `Invoice for ${clientName || clientEmail || clientWallet}`,
         description,
         amount: totalAmount,
@@ -150,8 +152,11 @@ const InvoiceCreationForm = () => {
         client_id: clientId,
         due_date: dueDate?.toISOString(),
         escrow_enabled: enableEscrow,
-        escrow_days: enableEscrow ? parseInt(escrowDays) : null
-      });
+        escrow_days: enableEscrow ? parseInt(escrowDays) : null,
+        crypto_amount: null // Add this missing field
+      };
+      
+      await createInvoice.mutateAsync(invoiceData);
       
       // Show success notification
       toast({

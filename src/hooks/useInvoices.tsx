@@ -30,6 +30,21 @@ export type Invoice = {
   } | null;
 }
 
+// Define a type for creating a new invoice that matches Supabase table structure
+export type CreateInvoiceInput = {
+  title: string;
+  description?: string | null;
+  amount: number;
+  currency?: string;
+  crypto_amount?: number | null;
+  crypto_currency?: "eth" | "usdc" | null;
+  status?: "draft" | "pending" | "paid" | "escrow_held" | "escrow_released" | "canceled";
+  escrow_enabled?: boolean;
+  escrow_days?: number | null;
+  due_date?: string | null;
+  client_id?: string;
+}
+
 export function useInvoices() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -58,7 +73,7 @@ export function useInvoices() {
   });
   
   const createInvoice = useMutation({
-    mutationFn: async (newInvoice: Omit<Invoice, "id" | "invoice_number" | "created_at" | "updated_at"> & { client_id?: string }) => {
+    mutationFn: async (newInvoice: CreateInvoiceInput) => {
       if (!user) throw new Error("User not authenticated");
       
       const { data, error } = await supabase
@@ -67,11 +82,11 @@ export function useInvoices() {
           title: newInvoice.title,
           description: newInvoice.description,
           amount: newInvoice.amount,
-          currency: newInvoice.currency,
+          currency: newInvoice.currency || "USD",
           crypto_amount: newInvoice.crypto_amount,
           crypto_currency: newInvoice.crypto_currency,
-          status: newInvoice.status,
-          escrow_enabled: newInvoice.escrow_enabled,
+          status: newInvoice.status || "draft",
+          escrow_enabled: newInvoice.escrow_enabled || false,
           escrow_days: newInvoice.escrow_days,
           due_date: newInvoice.due_date,
           client_id: newInvoice.client_id,
