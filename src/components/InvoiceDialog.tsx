@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -95,14 +94,14 @@ const InvoiceDialog = () => {
       // Calculate total amount from items
       const totalAmount = items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
       
-      // Format the invoice data
+      // Format the invoice data - fix the status type by explicitly typing it
       const invoiceData = {
         title,
         description,
         amount: totalAmount,
         currency: currency,
         crypto_currency: currency.toLowerCase() as "eth" | "usdc" | null,
-        status: "pending",
+        status: "pending" as "draft" | "pending" | "paid" | "escrow_held" | "escrow_released" | "canceled",
         escrow_enabled: enableEscrow,
         escrow_days: enableEscrow ? escrowDays : null,
         due_date: dueDate ? dueDate.toISOString() : null,
