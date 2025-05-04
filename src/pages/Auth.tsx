@@ -1,23 +1,35 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Wallet, Mail } from "lucide-react";
+import { Wallet, Mail, CheckCircle } from "lucide-react";
 import WalletAuthForm from "@/components/WalletAuthForm";
 import { ethers } from "ethers";
+
+type Plan = "free" | "pro" | "enterprise";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<Plan>("free");
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if there's a plan selection in location state
+    if (location.state && location.state.selectedPlan) {
+      setSelectedPlan(location.state.selectedPlan as Plan);
+      setIsSignUp(true); // If coming from pricing page, default to signup
+    }
+  }, [location]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +40,11 @@ const Auth = () => {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              plan: selectedPlan,
+            },
+          },
         });
 
         if (error) throw error;
@@ -61,6 +78,27 @@ const Auth = () => {
     }
   };
 
+  const plans = [
+    {
+      id: "free",
+      name: "Free",
+      description: "For individual freelancers",
+      features: ["10 invoices/month", "Basic analytics", "Email support"],
+    },
+    {
+      id: "pro",
+      name: "Pro",
+      description: "For growing businesses",
+      features: ["Unlimited invoices", "Advanced analytics", "Priority support"],
+    },
+    {
+      id: "enterprise",
+      name: "Enterprise",
+      description: "For large organizations",
+      features: ["Custom features", "Dedicated account manager", "API access"],
+    },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <div className="flex-1 flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8">
@@ -74,7 +112,7 @@ const Auth = () => {
           </div>
 
           <div className="bg-white shadow-md rounded-lg p-6">
-            <Tabs defaultValue="email">
+            <Tabs defaultValue={isSignUp && !location.state?.selectedPlan ? "plan" : "email"}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="email" className="flex items-center">
                   <Mail className="mr-2 h-4 w-4" /> Email
@@ -85,6 +123,33 @@ const Auth = () => {
               </TabsList>
 
               <TabsContent value="email">
+                {isSignUp && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium mb-4">Select a Plan</h3>
+                    <div className="grid grid-cols-3 gap-3">
+                      {plans.map((plan) => (
+                        <div 
+                          key={plan.id}
+                          onClick={() => setSelectedPlan(plan.id as Plan)}
+                          className={`cursor-pointer p-3 rounded-md border ${
+                            selectedPlan === plan.id 
+                              ? 'border-web3-purple bg-web3-purple/5' 
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-medium">{plan.name}</h4>
+                            {selectedPlan === plan.id && (
+                              <CheckCircle className="h-4 w-4 text-web3-purple" />
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">{plan.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <form onSubmit={handleEmailAuth} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>

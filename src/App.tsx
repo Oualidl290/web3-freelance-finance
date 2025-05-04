@@ -14,6 +14,7 @@ import Payments from "./pages/Payments";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 import InvoiceDetail from "./pages/InvoiceDetail";
+import Pricing from "./pages/Pricing";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/dashboard" element={
               <PrivateRoute>
                 <Dashboard />

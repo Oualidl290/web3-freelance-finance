@@ -5,17 +5,19 @@ import Footer from "@/components/Footer";
 import DashboardOverview from "@/components/DashboardOverview";
 import WalletConnect from "@/components/WalletConnect";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import DashboardLayout, { DashboardTab } from "@/components/dashboard/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import InvoiceDialog from "@/components/InvoiceDialog";
+import ClientDialog from "@/components/ClientDialog";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
+  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -61,7 +63,11 @@ const Dashboard = () => {
   }
 
   const handleCreateInvoiceClick = () => {
-    setIsDialogOpen(true);
+    setIsInvoiceDialogOpen(true);
+  };
+  
+  const handleCreateClientClick = () => {
+    setIsClientDialogOpen(true);
   };
 
   const handleTabChange = (tab: DashboardTab) => {
@@ -86,7 +92,17 @@ const Dashboard = () => {
           {/* Main Content Area */}
           <div className="space-y-6">
             {/* Test Mode Badge */}
-            <div className="flex justify-end">
+            <div className="flex justify-end space-x-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border border-web3-purple text-web3-purple bg-white rounded-full"
+                onClick={handleCreateClientClick}
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add Client
+              </Button>
+              
               <div className="relative">
                 <Button 
                   variant="outline" 
@@ -185,10 +201,15 @@ const Dashboard = () => {
       <Footer />
       
       {/* Create Invoice Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
         <DialogContent className="sm:max-w-[600px] rounded-lg p-0">
           <InvoiceDialog />
         </DialogContent>
+      </Dialog>
+      
+      {/* Create Client Dialog */}
+      <Dialog open={isClientDialogOpen} onOpenChange={setIsClientDialogOpen}>
+        <ClientDialog onClose={() => setIsClientDialogOpen(false)} />
       </Dialog>
     </div>
   );

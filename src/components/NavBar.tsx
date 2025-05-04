@@ -28,6 +28,9 @@ const NavBar = () => {
             <Link to="/features" className="text-gray-700 hover:text-web3-purple px-3 py-2 rounded-md text-sm font-medium">
               Features
             </Link>
+            <Link to="/pricing" className="text-gray-700 hover:text-web3-purple px-3 py-2 rounded-md text-sm font-medium">
+              Pricing
+            </Link>
             <div className="relative group">
               <button className="text-gray-700 hover:text-web3-purple px-3 py-2 rounded-md text-sm font-medium inline-flex items-center">
                 Resources
@@ -91,6 +94,13 @@ const NavBar = () => {
               onClick={() => setIsOpen(false)}
             >
               Features
+            </Link>
+            <Link 
+              to="/pricing" 
+              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-web3-purple hover:bg-gray-100"
+              onClick={() => setIsOpen(false)}
+            >
+              Pricing
             </Link>
             <Link 
               to="/docs" 
