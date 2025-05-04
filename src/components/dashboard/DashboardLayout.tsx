@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Wallet,
@@ -20,7 +20,7 @@ import { useWallets } from "@/hooks/useWallets";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useTransactions } from "@/hooks/useTransactions";
 import { formatDistanceToNow } from "date-fns";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import InvoiceDialog from "@/components/InvoiceDialog";
 
 export type DashboardTab = "overview" | "invoices" | "wallet" | "payments" | "analytics" | "settings";
@@ -28,16 +28,19 @@ export type DashboardTab = "overview" | "invoices" | "wallet" | "payments" | "an
 export default function DashboardLayout({ 
   activeTab,
   setActiveTab,
+  setIsDialogOpen,
   children 
 }: { 
   activeTab: DashboardTab; 
   setActiveTab: (tab: DashboardTab) => void;
+  setIsDialogOpen: () => void;
   children: React.ReactNode;
 }) {
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
   const { totalPendingAmount, pendingInvoices } = useInvoices();
   const { wallets, defaultWallet, totalBalance } = useWallets();
   const { recentTransactions } = useTransactions();
+  const navigate = useNavigate();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -56,6 +59,14 @@ export default function DashboardLayout({
   // Format balance to 4 decimal places for display
   const formatBalance = (balance: number) => {
     return balance.toFixed(4);
+  };
+
+  const handleCreateInvoiceClick = () => {
+    setIsDialogOpen();
+  };
+
+  const handleViewInvoice = (invoiceId: string) => {
+    navigate(`/invoices/${invoiceId}`);
   };
 
   return (
@@ -114,18 +125,12 @@ export default function DashboardLayout({
 
           {/* Main Navigation */}
           <div className="space-y-2">
-            <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  className="w-full bg-gradient-to-r from-web3-purple to-web3-blue text-white justify-start"
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Create Invoice
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]">
-                <InvoiceDialog />
-              </DialogContent>
-            </Dialog>
+            <Button 
+              className="w-full bg-gradient-to-r from-web3-purple to-web3-blue text-white justify-start"
+              onClick={handleCreateInvoiceClick}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Create Invoice
+            </Button>
             
             <Button 
               variant={activeTab === "overview" ? "secondary" : "ghost"} 
@@ -191,11 +196,14 @@ export default function DashboardLayout({
                       <div>
                         <p className="text-sm font-medium">Approve release for #{invoice.invoice_number}</p>
                         <p className="text-xs text-gray-500">Escrow period ends in {invoice.escrow_days} days</p>
-                        <Link to={`/invoices/${invoice.id}`}>
-                          <Button size="sm" variant="link" className="h-auto p-0 text-xs">
-                            View details
-                          </Button>
-                        </Link>
+                        <Button 
+                          size="sm" 
+                          variant="link" 
+                          className="h-auto p-0 text-xs"
+                          onClick={() => handleViewInvoice(invoice.id)}
+                        >
+                          View details
+                        </Button>
                       </div>
                     </div>
                   ))
@@ -213,7 +221,12 @@ export default function DashboardLayout({
                 <div>
                   <p className="text-sm font-medium">Convert $500 USDC to USD</p>
                   <p className="text-xs text-gray-500">Auto-convert enabled</p>
-                  <Button size="sm" variant="link" className="h-auto p-0 text-xs">
+                  <Button 
+                    size="sm" 
+                    variant="link" 
+                    className="h-auto p-0 text-xs"
+                    onClick={() => setActiveTab("settings")}
+                  >
                     Configure settings
                   </Button>
                 </div>
@@ -291,6 +304,11 @@ export default function DashboardLayout({
           </Card>
         </div>
       </div>
+
+      {/* Invoice Dialog */}
+      <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
+        <DialogTrigger className="hidden">Open Invoice Dialog</DialogTrigger>
+      </Dialog>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -137,9 +136,40 @@ export function useInvoiceMutations() {
     },
   });
 
+  // Add a function to delete an invoice
+  const deleteInvoice = useMutation({
+    mutationFn: async (id: string) => {
+      if (!user) throw new Error("User not authenticated");
+      
+      const { error } = await supabase
+        .from("invoices")
+        .delete()
+        .eq("id", id);
+        
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: (id) => {
+      queryClient.invalidateQueries({ queryKey: ["invoices", user?.id] });
+      toast({
+        title: "Invoice Deleted",
+        description: "The invoice has been removed",
+      });
+    },
+    onError: (error) => {
+      console.error("Error deleting invoice:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the invoice",
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     createInvoice,
     updateInvoiceStatus,
     releaseEscrow,
+    deleteInvoice,
   };
 }

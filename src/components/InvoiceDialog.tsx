@@ -1,33 +1,41 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { CalendarIcon, PlusCircle, Trash2 } from "lucide-react";
+import { CalendarIcon, PlusCircle, Trash2, Loader2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useInvoices } from "@/hooks/useInvoices";
+import { useClients } from "@/hooks/useClients";
 import {
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogClose
 } from "@/components/ui/dialog";
 
 const InvoiceDialog = () => {
-  const [clientEmail, setClientEmail] = useState("");
+  const [title, setTitle] = useState("");
+  const [clientId, setClientId] = useState("");
   const [currency, setCurrency] = useState("USDC");
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [description, setDescription] = useState("");
   const [enableEscrow, setEnableEscrow] = useState(true);
+  const [escrowDays, setEscrowDays] = useState(7);
   const [items, setItems] = useState([{ description: "", amount: "" }]);
   const { toast } = useToast();
+  const { clients, isLoading: clientsLoading } = useClients();
+  const { createInvoice } = useInvoices();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const addItem = () => {
     setItems([...items, { description: "", amount: "" }]);
@@ -57,11 +65,22 @@ const InvoiceDialog = () => {
     }, 0).toFixed(2);
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const resetForm = () => {
+    setTitle("");
+    setClientId("");
+    setCurrency("USDC");
+    setDueDate(undefined);
+    setDescription("");
+    setEnableEscrow(true);
+    setEscrowDays(7);
+    setItems([{ description: "", amount: "" }]);
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form
-    if (!clientEmail || !dueDate || items.some(item => !item.description || !item.amount)) {
+    if (!title || !clientId || !dueDate || items.some(item => !item.description || !item.amount)) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -70,17 +89,38 @@ const InvoiceDialog = () => {
       return;
     }
     
-    // Show success notification
-    toast({
-      title: "Invoice Created",
-      description: "Your invoice has been created and sent to the client",
-    });
-    
-    // Reset form
-    setClientEmail("");
-    setDueDate(undefined);
-    setDescription("");
-    setItems([{ description: "", amount: "" }]);
+    try {
+      setIsSubmitting(true);
+      
+      // Calculate total amount from items
+      const totalAmount = items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+      
+      // Format the invoice data
+      const invoiceData = {
+        title,
+        description,
+        amount: totalAmount,
+        currency: currency,
+        crypto_currency: currency.toLowerCase() as "eth" | "usdc" | null,
+        status: "pending",
+        escrow_enabled: enableEscrow,
+        escrow_days: enableEscrow ? escrowDays : null,
+        due_date: dueDate ? dueDate.toISOString() : null,
+        client_id: clientId
+      };
+      
+      // Submit the invoice
+      await createInvoice.mutateAsync(invoiceData);
+      
+      // Reset form
+      resetForm();
+      
+      // Close dialog (this will be handled by the parent component)
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -92,16 +132,45 @@ const InvoiceDialog = () => {
         </DialogDescription>
       </DialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4 py-2">
+        <div className="space-y-2">
+          <Label htmlFor="title">Invoice Title</Label>
+          <Input
+            id="title"
+            placeholder="Project work - May 2025"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="clientEmail">Client Email</Label>
-            <Input
-              id="clientEmail"
-              placeholder="client@example.com"
-              value={clientEmail}
-              onChange={(e) => setClientEmail(e.target.value)}
-              required
-            />
+            <Label htmlFor="client">Client</Label>
+            {clientsLoading ? (
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Loading clients...</span>
+              </div>
+            ) : (
+              <Select value={clientId} onValueChange={setClientId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.length > 0 ? (
+                    clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name || client.email || client.wallet_address?.substring(0, 8) + '...'}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-clients" disabled>
+                      No clients available
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           
           <div className="space-y-2">
@@ -135,12 +204,13 @@ const InvoiceDialog = () => {
                   {dueDate ? format(dueDate, "PPP") : "Select due date"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={dueDate}
                   onSelect={setDueDate}
                   initialFocus
+                  className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
             </Popover>
@@ -155,8 +225,24 @@ const InvoiceDialog = () => {
                 onCheckedChange={setEnableEscrow} 
               />
             </div>
+            {enableEscrow && (
+              <div className="mt-2">
+                <Label htmlFor="escrowDays">Escrow Period (Days)</Label>
+                <Input
+                  id="escrowDays"
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={escrowDays}
+                  onChange={(e) => setEscrowDays(parseInt(e.target.value) || 7)}
+                />
+              </div>
+            )}
             <p className="text-sm text-muted-foreground">
-              Client funds held in escrow until work completion
+              {enableEscrow 
+                ? `Client funds held in escrow for ${escrowDays} days`
+                : "Funds will be available immediately upon payment"
+              }
             </p>
           </div>
         </div>
@@ -227,11 +313,22 @@ const InvoiceDialog = () => {
         </div>
         
         <DialogFooter>
+          <DialogClose asChild>
+            <Button type="button" variant="outline">Cancel</Button>
+          </DialogClose>
           <Button 
             type="submit" 
             className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+            disabled={isSubmitting}
           >
-            Create Invoice
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              "Create Invoice"
+            )}
           </Button>
         </DialogFooter>
       </form>

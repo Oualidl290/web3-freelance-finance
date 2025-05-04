@@ -22,6 +22,7 @@ export function useInvoices() {
     createInvoice,
     updateInvoiceStatus,
     releaseEscrow,
+    deleteInvoice,
   } = useInvoiceMutations();
   
   return {
@@ -40,5 +41,6 @@ export function useInvoices() {
     createInvoice,
     updateInvoiceStatus,
     releaseEscrow,
+    deleteInvoice,
   };
 }

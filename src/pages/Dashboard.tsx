@@ -6,7 +6,7 @@ import DashboardOverview from "@/components/DashboardOverview";
 import WalletConnect from "@/components/WalletConnect";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import DashboardLayout, { DashboardTab } from "@/components/dashboard/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +17,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -59,12 +60,29 @@ const Dashboard = () => {
     );
   }
 
+  const handleCreateInvoiceClick = () => {
+    setIsDialogOpen(true);
+  };
+
+  const handleTabChange = (tab: DashboardTab) => {
+    if (tab === "invoices") {
+      // Use the CreateInvoice page instead for now
+      navigate("/create-invoice");
+    } else {
+      setActiveTab(tab);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <NavBar />
       
       <div className="flex-1 py-6">
-        <DashboardLayout activeTab={activeTab} setActiveTab={setActiveTab}>
+        <DashboardLayout 
+          activeTab={activeTab} 
+          setActiveTab={handleTabChange} 
+          setIsDialogOpen={handleCreateInvoiceClick}
+        >
           {/* Main Content Area */}
           <div className="space-y-6">
             {/* Test Mode Badge */}
@@ -85,7 +103,7 @@ const Dashboard = () => {
             </div>
             
             {/* Tab Content */}
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DashboardTab)}>
+            <Tabs value={activeTab} onValueChange={(value) => handleTabChange(value as DashboardTab)}>
               <TabsContent value="overview" className="m-0">
                 <DashboardOverview />
               </TabsContent>
@@ -168,7 +186,7 @@ const Dashboard = () => {
       
       {/* Create Invoice Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] rounded-lg">
+        <DialogContent className="sm:max-w-[600px] rounded-lg p-0">
           <InvoiceDialog />
         </DialogContent>
       </Dialog>
