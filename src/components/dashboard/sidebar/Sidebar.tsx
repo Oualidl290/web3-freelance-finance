@@ -2,14 +2,12 @@
 import { Button } from "@/components/ui/button";
 import { 
   LayoutDashboard, FileText, Plus, ArrowDownToLine, 
-  CreditCard, BarChart3, Settings, HelpCircle, UserPlus 
+  CreditCard, BarChart3, Settings, HelpCircle
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { DashboardTab } from "../DashboardLayout";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useInvoices } from "@/hooks/useInvoices";
 
 interface SidebarProps {
@@ -19,7 +17,6 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activeTab, setActiveTab, handleCreateInvoiceClick }: SidebarProps) => {
-  const navigate = useNavigate();
   const { pendingInvoices } = useInvoices();
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -74,18 +71,6 @@ const Sidebar = ({ activeTab, setActiveTab, handleCreateInvoiceClick }: SidebarP
           <span className="ml-2 font-bold text-lg">Web3Pay</span>
         </div>
       </div>
-      
-      {/* User Profile */}
-      <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg mb-6">
-        <Avatar>
-          <AvatarImage src="/avatar.png" />
-          <AvatarFallback>UR</AvatarFallback>
-        </Avatar>
-        <div>
-          <p className="font-medium text-sm">User Account</p>
-          <p className="text-xs text-muted-foreground">Pro Plan</p>
-        </div>
-      </div>
 
       {/* Main Action Button */}
       <Button 
@@ -93,16 +78,6 @@ const Sidebar = ({ activeTab, setActiveTab, handleCreateInvoiceClick }: SidebarP
         onClick={handleCreateInvoiceClick}
       >
         <Plus className="mr-2 h-4 w-4" /> Create Invoice
-      </Button>
-
-      {/* Client Button */}
-      <Button 
-        variant="outline" 
-        className="mb-6 flex items-center justify-center gap-2"
-        onClick={() => navigate("/clients")}
-      >
-        <UserPlus className="h-4 w-4" />
-        Add Client
       </Button>
       
       {/* Navigation Menu */}

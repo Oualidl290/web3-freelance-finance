@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import DashboardOverview from "@/components/DashboardOverview";
 import WalletConnect from "@/components/WalletConnect";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import DashboardLayout, { DashboardTab } from "@/components/dashboard/DashboardLayout";
@@ -159,33 +159,7 @@ const Dashboard = () => {
           activeTab={activeTab} 
           setActiveTab={handleTabChange} 
           setIsDialogOpen={handleCreateInvoiceClick}
-        >
-          <div className="flex items-center justify-end mb-4 space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="border border-web3-purple text-web3-purple bg-white"
-              onClick={() => setIsClientDialogOpen(true)}
-            >
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add Client
-            </Button>
-            
-            <div className="relative">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="border border-apple-accent2 text-apple-accent2 bg-white"
-              >
-                <span className="flex h-2 w-2 absolute top-0 right-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-apple-accent2 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-apple-accent2"></span>
-                </span>
-                <span className="ml-1">Test Mode</span>
-              </Button>
-            </div>
-          </div>
-          
+        >          
           <Tabs value={activeTab} className="mt-0">
             <TabsContent value={activeTab} className="mt-0 p-0 border-none">
               {renderTabContent()}

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { useAuth } from "@/hooks/useAuth";
-import ProfileDropdown from "@/components/ProfileDropdown";
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,12 +45,9 @@ const NavBar = () => {
           
           <div className="hidden md:flex items-center space-x-3">
             {user ? (
-              <>
-                <Link to="/dashboard">
-                  <Button variant="ghost">Dashboard</Button>
-                </Link>
-                <ProfileDropdown />
-              </>
+              <Link to="/dashboard">
+                <Button variant="ghost">Dashboard</Button>
+              </Link>
             ) : (
               <>
                 <Link to="/auth">
