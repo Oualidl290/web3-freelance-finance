@@ -1,46 +1,128 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Wallet, Copy, Check, ExternalLink } from "lucide-react";
+import { Wallet, Copy, Check, ExternalLink, Loader2 } from "lucide-react";
+import { ethers } from "ethers";
 
 const WalletConnect = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [hasCopied, setHasCopied] = useState(false);
+  const [walletAddress, setWalletAddress] = useState("");
+  const [balance, setBalance] = useState("0");
   const { toast } = useToast();
   
-  // This would be the user's wallet address in a real app
-  const mockWalletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
-  const shortenedAddress = `${mockWalletAddress.substring(0, 6)}...${mockWalletAddress.substring(mockWalletAddress.length - 4)}`;
+  // Check if MetaMask is already connected on component mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          if (accounts.length > 0) {
+            setWalletAddress(accounts[0]);
+            setIsConnected(true);
+            fetchBalance(accounts[0]);
+          }
+        } catch (error) {
+          console.error("Error checking connection:", error);
+        }
+      }
+    };
+    
+    checkConnection();
+    
+    // Listen for account changes
+    const handleAccountsChanged = (accounts) => {
+      if (accounts.length === 0) {
+        // User disconnected
+        setIsConnected(false);
+        setWalletAddress("");
+        setBalance("0");
+      } else {
+        // Account changed
+        setWalletAddress(accounts[0]);
+        setIsConnected(true);
+        fetchBalance(accounts[0]);
+      }
+    };
+    
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+    }
+    
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+      }
+    };
+  }, []);
   
-  const handleConnect = () => {
+  const fetchBalance = async (address) => {
+    if (window.ethereum) {
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const balance = await provider.getBalance(address);
+        setBalance(ethers.utils.formatEther(balance));
+      } catch (error) {
+        console.error("Error fetching balance:", error);
+      }
+    }
+  };
+  
+  const handleConnect = async () => {
     setIsConnecting(true);
     
-    // Simulate wallet connection
-    setTimeout(() => {
+    if (!window.ethereum) {
+      toast({
+        title: "MetaMask not found",
+        description: "Please install MetaMask browser extension to continue",
+        variant: "destructive",
+      });
       setIsConnecting(false);
+      return;
+    }
+    
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      setWalletAddress(accounts[0]);
       setIsConnected(true);
+      
+      // Fetch balance
+      fetchBalance(accounts[0]);
       
       toast({
         title: "Wallet Connected",
-        description: "Your wallet has been successfully connected.",
+        description: "Your MetaMask wallet has been successfully connected.",
       });
-    }, 1500);
+    } catch (error) {
+      console.error("Error connecting:", error);
+      toast({
+        title: "Connection Failed",
+        description: error.message || "Failed to connect wallet",
+        variant: "destructive",
+      });
+    } finally {
+      setIsConnecting(false);
+    }
   };
   
   const handleDisconnect = () => {
+    // Note: MetaMask doesn't support programmatic disconnection
+    // We can only reset our app's state
     setIsConnected(false);
+    setWalletAddress("");
+    setBalance("0");
     
     toast({
       title: "Wallet Disconnected",
-      description: "Your wallet has been disconnected.",
+      description: "Your wallet has been disconnected from this application.",
     });
   };
   
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(mockWalletAddress);
+    navigator.clipboard.writeText(walletAddress);
     setHasCopied(true);
     
     toast({
@@ -51,6 +133,11 @@ const WalletConnect = () => {
     setTimeout(() => {
       setHasCopied(false);
     }, 2000);
+  };
+
+  const shortenAddress = (address) => {
+    if (!address) return "";
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
   
   return (
@@ -78,12 +165,21 @@ const WalletConnect = () => {
               className="w-full bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200 flex items-center justify-center"
               disabled={isConnecting}
             >
-              <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
-                alt="MetaMask" 
-                className="h-5 w-5 mr-2" 
-              />
-              {isConnecting ? "Connecting..." : "Connect MetaMask"}
+              {isConnecting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <img 
+                    src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
+                    alt="MetaMask" 
+                    className="h-5 w-5 mr-2" 
+                  />
+                  Connect MetaMask
+                </>
+              )}
             </Button>
             
             <Button 
@@ -110,7 +206,7 @@ const WalletConnect = () => {
             <div className="border rounded-md p-3">
               <p className="text-sm text-muted-foreground mb-1">Your Address</p>
               <div className="flex items-center justify-between">
-                <code className="text-sm bg-muted p-1 rounded">{shortenedAddress}</code>
+                <code className="text-sm bg-muted p-1 rounded">{shortenAddress(walletAddress)}</code>
                 <div className="flex space-x-1">
                   <Button 
                     variant="ghost" 
@@ -128,7 +224,7 @@ const WalletConnect = () => {
                     size="sm" 
                     className="h-8 w-8 p-0"
                     onClick={() => {
-                      window.open(`https://etherscan.io/address/${mockWalletAddress}`, '_blank');
+                      window.open(`https://etherscan.io/address/${walletAddress}`, '_blank');
                     }}
                   >
                     <ExternalLink className="h-4 w-4" />
@@ -144,7 +240,7 @@ const WalletConnect = () => {
               </div>
               <div className="flex-1 text-sm">
                 <div className="font-medium">Balance</div>
-                <div className="text-muted-foreground">0.85 ETH</div>
+                <div className="text-muted-foreground">{parseFloat(balance).toFixed(4)} ETH</div>
               </div>
             </div>
           </div>

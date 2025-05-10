@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
 
 const WalletAuthForm = () => {
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,7 @@ const WalletAuthForm = () => {
           description: "Please install MetaMask browser extension to continue",
           variant: "destructive",
         });
+        setLoading(false);
         return;
       }
 
@@ -32,8 +34,7 @@ const WalletAuthForm = () => {
         throw new Error("No accounts found");
       }
 
-      // Get a nonce from the server for the user to sign
-      // This would typically involve a serverless function / edge function
+      // Generate a random nonce for the user to sign
       const nonce = generateNonce();
       
       // Request signature from user
@@ -45,7 +46,6 @@ const WalletAuthForm = () => {
 
       // In a real implementation, we would verify the signature on the server
       // For now, we'll attempt to sign in with the wallet address as the email
-      // This is just for demonstration - in production, you'd use a proper auth flow
       
       // Create a custom email based on the wallet address
       const walletEmail = `${address.toLowerCase()}@wallet.auth`;
@@ -79,7 +79,7 @@ const WalletAuthForm = () => {
       
       navigate("/dashboard");
       
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Connection Failed",
         description: error.message || "Failed to connect wallet",
@@ -108,12 +108,21 @@ const WalletAuthForm = () => {
         disabled={loading}
         className="w-full bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200 flex items-center justify-center"
       >
-        <img 
-          src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
-          alt="MetaMask" 
-          className="h-5 w-5 mr-2" 
-        />
-        {loading ? "Connecting..." : "Connect MetaMask"}
+        {loading ? (
+          <>
+            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            Connecting...
+          </>
+        ) : (
+          <>
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
+              alt="MetaMask" 
+              className="h-5 w-5 mr-2" 
+            />
+            Connect MetaMask
+          </>
+        )}
       </Button>
 
       <div className="relative">
