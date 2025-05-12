@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -116,14 +115,16 @@ const InvoiceDialog = () => {
       // Due date formatting
       const formattedDueDate = dueDate ? dueDate.toISOString() : undefined;
       
-      // Create invoice data
+      // Create invoice data - properly typing crypto_currency
+      const cryptoCurrency = currency.toLowerCase() === "usdc" ? "usdc" as const : "eth" as const;
+      
       const invoiceData = {
         title,
         description: description || null,
         amount: finalAmount,
         currency,
-        crypto_currency: currency.toLowerCase() === "usdc" ? "usdc" : "eth",
-        status: "draft",
+        crypto_currency: cryptoCurrency,
+        status: "draft" as const,
         due_date: formattedDueDate,
         client_id: clientId,
         escrow_enabled: escrowEnabled,
