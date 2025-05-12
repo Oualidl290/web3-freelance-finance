@@ -1,132 +1,152 @@
 
-import { useState, useEffect } from "react";
-import { LineItem } from "./LineItems";
-import { paymentTiers } from "./PaymentTierSelector";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { CreateInvoiceInput } from "@/types/invoice";
 
-export const useInvoiceForm = (createInvoiceCallback: any) => {
+type LineItem = {
+  id: string;
+  description: string;
+  amount: number;
+};
+
+export function useInvoiceForm(createInvoice: (data: CreateInvoiceInput) => Promise<string | undefined>) {
   const [title, setTitle] = useState("");
   const [clientId, setClientId] = useState("");
   const [currency, setCurrency] = useState("USDC");
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [description, setDescription] = useState("");
-  const [enableEscrow, setEnableEscrow] = useState(true);
-  const [escrowDays, setEscrowDays] = useState(7);
-  const [items, setItems] = useState<LineItem[]>([{ description: "", amount: "" }]);
-  const [selectedTier, setSelectedTier] = useState<string>("hodl");
+  const [selectedTier, setSelectedTier] = useState("standard");
+  const [escrowEnabled, setEscrowEnabled] = useState(false);
+  const [escrowDays, setEscrowDays] = useState<number | null>(14);
+  const [items, setItems] = useState<LineItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Update escrow days when tier changes
-  useEffect(() => {
-    const tier = paymentTiers.find(t => t.id === selectedTier);
-    if (tier) {
-      setEnableEscrow(tier.escrowDays !== null);
-      if (tier.escrowDays !== null) {
-        setEscrowDays(tier.escrowDays);
-      }
-    }
-  }, [selectedTier]);
-  
+  // Fee rates based on tier
+  const feeRates: { [key: string]: number } = {
+    basic: 0.02,
+    standard: 0.01,
+    premium: 0.005,
+  };
+
+  // Add line item
   const addItem = () => {
-    setItems([...items, { description: "", amount: "" }]);
-  };
-  
-  const removeItem = (index: number) => {
-    const newItems = [...items];
-    newItems.splice(index, 1);
-    setItems(newItems);
-  };
-  
-  const updateItemDescription = (index: number, value: string) => {
-    const newItems = [...items];
-    newItems[index].description = value;
-    setItems(newItems);
-  };
-  
-  const updateItemAmount = (index: number, value: string) => {
-    const newItems = [...items];
-    newItems[index].amount = value;
-    setItems(newItems);
-  };
-  
-  const calculateTotal = () => {
-    return items.reduce((total, item) => {
-      return total + (parseFloat(item.amount) || 0);
-    }, 0).toFixed(2);
-  };
-  
-  // Calculate fee based on selected tier
-  const calculateFee = () => {
-    const tier = paymentTiers.find(t => t.id === selectedTier);
-    const total = parseFloat(calculateTotal());
-    if (tier && !isNaN(total)) {
-      return ((total * tier.fee) / 100).toFixed(2);
-    }
-    return "0.00";
-  };
-  
-  // Calculate final amount after fee
-  const calculateFinalAmount = () => {
-    const total = parseFloat(calculateTotal());
-    const fee = parseFloat(calculateFee());
-    if (!isNaN(total) && !isNaN(fee)) {
-      return (total - fee).toFixed(2);
-    }
-    return total.toFixed(2);
-  };
-  
-  const resetForm = () => {
-    setTitle("");
-    setClientId("");
-    setCurrency("USDC");
-    setDueDate(undefined);
-    setDescription("");
-    setEnableEscrow(true);
-    setEscrowDays(7);
-    setItems([{ description: "", amount: "" }]);
-    setSelectedTier("hodl");
+    setItems([
+      ...items,
+      { id: generateRandomId(), description: "", amount: 0 },
+    ]);
   };
 
+  // Remove line item
+  const removeItem = (id: string) => {
+    setItems(items.filter((item) => item.id !== id));
+  };
+
+  // Update item description
+  const updateItemDescription = (id: string, description: string) => {
+    setItems(
+      items.map((item) =>
+        item.id === id ? { ...item, description } : item
+      )
+    );
+  };
+
+  // Update item amount
+  const updateItemAmount = (id: string, amount: string) => {
+    setItems(
+      items.map((item) =>
+        item.id === id ? { ...item, amount: parseFloat(amount) || 0 } : item
+      )
+    );
+  };
+
+  // Calculate total amount
+  const calculateTotal = () => {
+    return items.reduce((sum, item) => sum + item.amount, 0);
+  };
+
+  // Calculate fee amount
+  const calculateFee = () => {
+    const total = calculateTotal();
+    const feeRate = feeRates[selectedTier] || 0.01;
+    return total * feeRate;
+  };
+
+  // Calculate final amount
+  const calculateFinalAmount = () => {
+    return calculateTotal() - calculateFee();
+  };
+
+  // Generate random ID for line items
+  const generateRandomId = () => {
+    return Math.random().toString(36).substring(2, 10);
+  };
+
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Form validation happens in the InvoiceDialog component
-    
+    if (!title || !clientId) {
+      toast({
+        title: "Error",
+        description: "Please fill out all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      setIsSubmitting(true);
+      // Calculate total from line items
+      const total = calculateTotal();
       
-      // Calculate total amount from items
-      const totalAmount = items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-      
-      // Get selected tier details
-      const tier = paymentTiers.find(t => t.id === selectedTier);
-      
-      // Format the invoice data with explicit typing for status
-      const invoiceData = {
+      // Calculate final amount after fees
+      const finalAmount = calculateFinalAmount();
+
+      // Due date formatting
+      const formattedDueDate = dueDate ? dueDate.toISOString() : undefined;
+
+      // Create invoice data
+      const invoiceData: CreateInvoiceInput = {
         title,
-        description,
-        amount: totalAmount,
-        currency: currency,
-        crypto_currency: currency.toLowerCase() as "eth" | "usdc" | null,
-        status: "pending" as "draft" | "pending" | "paid" | "escrow_held" | "escrow_released" | "canceled",
-        escrow_enabled: tier?.escrowDays !== null,
-        escrow_days: tier?.escrowDays || null,
-        due_date: dueDate ? dueDate.toISOString() : null,
-        client_id: clientId
+        description: description || null,
+        amount: finalAmount,
+        currency,
+        crypto_currency: currency.toLowerCase() === "usdc" ? "usdc" : "eth",
+        status: "draft",
+        due_date: formattedDueDate,
+        client_id: clientId,
+        escrow_enabled: escrowEnabled,
+        escrow_days: escrowEnabled ? escrowDays : null
       };
+
+      // Call create invoice function
+      const invoiceId = await createInvoice(invoiceData);
       
-      // Submit the invoice
-      await createInvoiceCallback.mutateAsync(invoiceData);
-      
-      // Reset form
-      resetForm();
-      
-    } catch (error) {
-      console.error("Error creating invoice:", error);
+      if (invoiceId) {
+        toast({
+          title: "Success",
+          description: "Invoice created successfully",
+        });
+
+        // Navigate to the invoice detail page
+        navigate(`/invoices/${invoiceId}`);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create invoice",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Return state and functions
   return {
     title,
     setTitle,
@@ -136,12 +156,8 @@ export const useInvoiceForm = (createInvoiceCallback: any) => {
     setCurrency,
     dueDate,
     setDueDate,
-    description, 
+    description,
     setDescription,
-    enableEscrow,
-    setEnableEscrow,
-    escrowDays,
-    setEscrowDays,
     items,
     addItem,
     removeItem,
@@ -149,10 +165,14 @@ export const useInvoiceForm = (createInvoiceCallback: any) => {
     updateItemAmount,
     selectedTier,
     setSelectedTier,
+    escrowEnabled,
+    setEscrowEnabled,
+    escrowDays,
+    setEscrowDays,
     isSubmitting,
     calculateTotal,
     calculateFee,
     calculateFinalAmount,
     handleSubmit
   };
-};
+}

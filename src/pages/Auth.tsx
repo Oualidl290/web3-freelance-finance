@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Wallet, Mail, CheckCircle } from "lucide-react";
+import { Wallet, Mail, CheckCircle, ArrowLeft } from "lucide-react";
 import WalletAuthForm from "@/components/WalletAuthForm";
-import { ethers } from "ethers";
+import { Link } from "react-router-dom";
 
 type Plan = "free" | "pro" | "enterprise";
 
@@ -101,46 +101,54 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
+      <div className="p-4">
+        <Link to="/" className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900">
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back to Home
+        </Link>
+      </div>
+      
       <div className="flex-1 flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="mx-auto h-12 w-12 rounded-full bg-gradient-to-r from-web3-purple to-web3-teal"></div>
+            <div className="mx-auto h-12 w-12 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 flex items-center justify-center text-white text-lg font-bold">
+              W3
+            </div>
             <h1 className="mt-4 text-3xl font-bold">Welcome to Web3Pay</h1>
             <p className="mt-2 text-gray-600">
               {isSignUp ? "Create your account" : "Sign in to your account"}
             </p>
           </div>
 
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <Tabs defaultValue={isSignUp && !location.state?.selectedPlan ? "plan" : "email"}>
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="email" className="flex items-center">
+          <div className="bg-white shadow-md rounded-lg">
+            <Tabs defaultValue={isSignUp && !location.state?.selectedPlan ? "plan" : "email"} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="email" className="flex items-center rounded-tl-lg">
                   <Mail className="mr-2 h-4 w-4" /> Email
                 </TabsTrigger>
-                <TabsTrigger value="wallet" className="flex items-center">
+                <TabsTrigger value="wallet" className="flex items-center rounded-tr-lg">
                   <Wallet className="mr-2 h-4 w-4" /> Wallet
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="email">
+              <TabsContent value="email" className="p-6 space-y-6">
                 {isSignUp && (
                   <div className="mb-6">
                     <h3 className="text-lg font-medium mb-4">Select a Plan</h3>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {plans.map((plan) => (
                         <div 
                           key={plan.id}
                           onClick={() => setSelectedPlan(plan.id as Plan)}
                           className={`cursor-pointer p-3 rounded-md border ${
                             selectedPlan === plan.id 
-                              ? 'border-web3-purple bg-web3-purple/5' 
+                              ? 'border-purple-500 bg-purple-50' 
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className="flex justify-between items-start">
                             <h4 className="font-medium">{plan.name}</h4>
                             {selectedPlan === plan.id && (
-                              <CheckCircle className="h-4 w-4 text-web3-purple" />
+                              <CheckCircle className="h-4 w-4 text-purple-500" />
                             )}
                           </div>
                           <p className="text-xs text-gray-500 mt-1">{plan.description}</p>
@@ -159,6 +167,7 @@ const Auth = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="your@email.com"
+                      className="border-gray-200"
                       required
                     />
                   </div>
@@ -168,7 +177,7 @@ const Auth = () => {
                       {!isSignUp && (
                         <a 
                           href="#" 
-                          className="text-sm text-web3-purple hover:underline"
+                          className="text-sm text-purple-600 hover:underline"
                           onClick={(e) => {
                             e.preventDefault();
                             toast({
@@ -187,13 +196,14 @@ const Auth = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
+                      className="border-gray-200"
                       required
                     />
                   </div>
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-web3-purple to-web3-blue text-white"
+                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
                     disabled={loading}
                   >
                     {loading
@@ -204,12 +214,12 @@ const Auth = () => {
                   </Button>
                 </form>
 
-                <div className="mt-4 text-center text-sm">
+                <div className="text-center text-sm">
                   {isSignUp ? (
                     <>
                       Already have an account?{" "}
                       <button
-                        className="text-web3-purple hover:underline"
+                        className="text-purple-600 hover:underline"
                         onClick={() => setIsSignUp(false)}
                       >
                         Sign in
@@ -219,7 +229,7 @@ const Auth = () => {
                     <>
                       Don't have an account?{" "}
                       <button
-                        className="text-web3-purple hover:underline"
+                        className="text-purple-600 hover:underline"
                         onClick={() => setIsSignUp(true)}
                       >
                         Create one
@@ -229,7 +239,7 @@ const Auth = () => {
                 </div>
               </TabsContent>
 
-              <TabsContent value="wallet">
+              <TabsContent value="wallet" className="p-6">
                 <WalletAuthForm />
               </TabsContent>
             </Tabs>

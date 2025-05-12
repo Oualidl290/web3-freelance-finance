@@ -5,20 +5,23 @@ import Footer from "@/components/Footer";
 import DashboardOverview from "@/components/DashboardOverview";
 import WalletConnect from "@/components/WalletConnect";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2 } from "lucide-react";
+import { Loader2, LayoutDashboard, FileText, Wallet, CreditCard, BarChart3, Settings, Plus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import DashboardLayout, { DashboardTab } from "@/components/dashboard/DashboardLayout";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import InvoiceDialog from "@/components/InvoiceDialog";
 import ClientDialog from "@/components/ClientDialog";
+import { useInvoices } from "@/hooks/useInvoices";
+
+type DashboardTab = "overview" | "invoices" | "wallet" | "payments" | "analytics" | "settings";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
   const { user, isLoading } = useAuth();
+  const { pendingInvoices } = useInvoices();
   const navigate = useNavigate();
 
   if (isLoading) {
@@ -28,7 +31,7 @@ const Dashboard = () => {
         
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="h-12 w-12 mx-auto animate-spin text-web3-purple" />
+            <Loader2 className="h-12 w-12 mx-auto animate-spin text-purple-600" />
             <p className="mt-4 text-lg">Loading your dashboard...</p>
           </div>
         </div>
@@ -50,7 +53,7 @@ const Dashboard = () => {
               Please sign in to access your dashboard and manage your invoices.
             </p>
             <Link to="/auth">
-              <Button className="bg-web3-purple hover:bg-web3-purple/90 text-white rounded-full">
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-full">
                 Sign In
               </Button>
             </Link>
@@ -66,15 +69,71 @@ const Dashboard = () => {
     setIsInvoiceDialogOpen(true);
   };
   
-  const handleTabChange = (tab: DashboardTab) => {
-    setActiveTab(tab);
-  };
+  const navItems = [
+    {
+      id: "overview",
+      label: "Overview",
+      icon: <LayoutDashboard className="h-5 w-5" />,
+      onClick: () => setActiveTab("overview")
+    },
+    {
+      id: "invoices",
+      label: "Invoices",
+      icon: <FileText className="h-5 w-5" />,
+      badge: pendingInvoices.length > 0 ? pendingInvoices.length : null,
+      onClick: () => setActiveTab("invoices")
+    },
+    {
+      id: "wallet",
+      label: "Wallet",
+      icon: <Wallet className="h-5 w-5" />,
+      onClick: () => setActiveTab("wallet")
+    },
+    {
+      id: "payments",
+      label: "Payments",
+      icon: <CreditCard className="h-5 w-5" />,
+      onClick: () => setActiveTab("payments")
+    },
+    {
+      id: "analytics",
+      label: "Analytics",
+      icon: <BarChart3 className="h-5 w-5" />,
+      onClick: () => setActiveTab("analytics")
+    },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: <Settings className="h-5 w-5" />,
+      onClick: () => setActiveTab("settings")
+    }
+  ];
 
   // Content for different tabs
   const renderTabContent = () => {
     switch (activeTab) {
       case "overview":
         return <DashboardOverview />;
+      case "invoices":
+        return (
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-2xl font-bold">Invoices</h2>
+                <p className="text-muted-foreground">
+                  Manage all your invoices and payments
+                </p>
+              </div>
+              <Button 
+                onClick={handleCreateInvoiceClick}
+                className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Create Invoice
+              </Button>
+            </div>
+            {/* Invoice list would go here */}
+          </div>
+        );
       case "wallet":
         return (
           <div className="bg-white rounded-lg shadow p-6">
@@ -83,6 +142,15 @@ const Dashboard = () => {
               Connect and manage your crypto wallets for receiving payments
             </p>
             <WalletConnect />
+          </div>
+        );
+      case "payments":
+        return (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-2xl font-bold mb-4">Payment History</h2>
+            <p className="text-muted-foreground mb-6">
+              View all your payment transactions
+            </p>
           </div>
         );
       case "analytics":
@@ -103,7 +171,6 @@ const Dashboard = () => {
               <p className="text-gray-500 mb-4">
                 Detailed analytics will be available soon to help you track your business performance.
               </p>
-              {/* Removed non-functional button */}
             </div>
           </div>
         );
@@ -155,18 +222,83 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <NavBar />
       
-      <div className="flex-1">
-        <DashboardLayout 
-          activeTab={activeTab} 
-          setActiveTab={handleTabChange} 
-          setIsDialogOpen={handleCreateInvoiceClick}
-        >          
-          <Tabs value={activeTab} className="mt-0">
-            <TabsContent value={activeTab} className="mt-0 p-0 border-none">
-              {renderTabContent()}
-            </TabsContent>
-          </Tabs>
-        </DashboardLayout>
+      <div className="flex-1 p-4 md:p-6 lg:p-8">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar */}
+          <div className="w-full lg:w-64 bg-white rounded-lg shadow p-4">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <div className="h-8 w-8 rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 flex items-center justify-center text-white font-semibold">
+                  W3
+                </div>
+                <span className="ml-2 font-bold text-lg">Web3Pay</span>
+              </div>
+            </div>
+
+            {/* Main Action Button */}
+            <Button 
+              className="w-full mb-6 bg-gradient-to-r from-purple-500 to-indigo-600 text-white"
+              onClick={handleCreateInvoiceClick}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Create Invoice
+            </Button>
+            
+            {/* Navigation Menu */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground px-2 py-1">
+                DASHBOARD
+              </p>
+              
+              {navItems.map((item) => (
+                <Button
+                  key={item.id}
+                  variant="ghost"
+                  className={`w-full justify-start text-sm font-medium ${
+                    activeTab === item.id ? "bg-gray-100 font-medium" : ""
+                  }`}
+                  onClick={item.onClick}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center">
+                      {item.icon}
+                      <span className="ml-2">{item.label}</span>
+                    </div>
+                    {item.badge && (
+                      <span className="ml-2 bg-purple-100 text-purple-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                </Button>
+              ))}
+            </div>
+
+            {/* Support Section - Bottom */}
+            <div className="mt-auto pt-6">
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                <div className="flex items-center mb-2">
+                  <div className="h-4 w-4 text-purple-600 mr-2">?</div>
+                  <p className="text-sm font-medium">Need Help?</p>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">
+                  Our support team is just a click away
+                </p>
+                <Button variant="outline" size="sm" className="w-full text-xs bg-white">
+                  Contact Support
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="flex-1">
+            <Tabs value={activeTab} className="mt-0">
+              <TabsContent value={activeTab} className="mt-0 p-0 border-none">
+                {renderTabContent()}
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </div>
       
       <Footer />

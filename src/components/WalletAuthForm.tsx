@@ -49,9 +49,6 @@ const WalletAuthForm = () => {
         params: [message, address],
       });
 
-      // In a real implementation, we would verify the signature on the server
-      // For now, we'll create or authenticate the user with the wallet address
-      
       // Create a custom email based on the wallet address
       const walletEmail = `${address.toLowerCase()}@wallet.auth`;
       
