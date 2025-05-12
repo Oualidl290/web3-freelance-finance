@@ -16,6 +16,8 @@ export type Invoice = {
   due_date: string | null;
   created_at: string;
   updated_at: string | null;
+  chain_id: number | null;
+  escrow_contract_address: string | null;
   client: {
     id: string;
     name: string | null;
@@ -37,4 +39,6 @@ export type CreateInvoiceInput = {
   escrow_days?: number | null;
   due_date?: string | null;
   client_id?: string;
+  chain_id?: number | null;
+  escrow_contract_address?: string | null;
 }

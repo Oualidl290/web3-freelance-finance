@@ -113,6 +113,38 @@ export type Database = {
         }
         Relationships: []
       }
+      escrow_releases: {
+        Row: {
+          id: string
+          invoice_id: string | null
+          release_tx_hash: string | null
+          released_at: string | null
+          released_by: string | null
+        }
+        Insert: {
+          id?: string
+          invoice_id?: string | null
+          release_tx_hash?: string | null
+          released_at?: string | null
+          released_by?: string | null
+        }
+        Update: {
+          id?: string
+          invoice_id?: string | null
+          release_tx_hash?: string | null
+          released_at?: string | null
+          released_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_releases_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_views: {
         Row: {
           id: string
@@ -151,6 +183,7 @@ export type Database = {
       invoices: {
         Row: {
           amount: number
+          chain_id: number | null
           client_id: string | null
           created_at: string | null
           crypto_amount: number | null
@@ -158,6 +191,7 @@ export type Database = {
           currency: string | null
           description: string | null
           due_date: string | null
+          escrow_contract_address: string | null
           escrow_days: number | null
           escrow_enabled: boolean | null
           escrow_release_date: string | null
@@ -171,6 +205,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          chain_id?: number | null
           client_id?: string | null
           created_at?: string | null
           crypto_amount?: number | null
@@ -178,6 +213,7 @@ export type Database = {
           currency?: string | null
           description?: string | null
           due_date?: string | null
+          escrow_contract_address?: string | null
           escrow_days?: number | null
           escrow_enabled?: boolean | null
           escrow_release_date?: string | null
@@ -191,6 +227,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          chain_id?: number | null
           client_id?: string | null
           created_at?: string | null
           crypto_amount?: number | null
@@ -198,6 +235,7 @@ export type Database = {
           currency?: string | null
           description?: string | null
           due_date?: string | null
+          escrow_contract_address?: string | null
           escrow_days?: number | null
           escrow_enabled?: boolean | null
           escrow_release_date?: string | null
@@ -326,43 +364,58 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          confirmed_at: string | null
           created_at: string | null
           currency: Database["public"]["Enums"]["wallet_type"]
           destination_address: string | null
           fee: number | null
+          from_address: string | null
           id: string
           invoice_id: string | null
+          network_fee: number | null
           status: string | null
+          to_address: string | null
           transaction_hash: string | null
           transaction_type: Database["public"]["Enums"]["transaction_type"]
+          tx_hash: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           amount: number
+          confirmed_at?: string | null
           created_at?: string | null
           currency: Database["public"]["Enums"]["wallet_type"]
           destination_address?: string | null
           fee?: number | null
+          from_address?: string | null
           id?: string
           invoice_id?: string | null
+          network_fee?: number | null
           status?: string | null
+          to_address?: string | null
           transaction_hash?: string | null
           transaction_type: Database["public"]["Enums"]["transaction_type"]
+          tx_hash?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           amount?: number
+          confirmed_at?: string | null
           created_at?: string | null
           currency?: Database["public"]["Enums"]["wallet_type"]
           destination_address?: string | null
           fee?: number | null
+          from_address?: string | null
           id?: string
           invoice_id?: string | null
+          network_fee?: number | null
           status?: string | null
+          to_address?: string | null
           transaction_hash?: string | null
           transaction_type?: Database["public"]["Enums"]["transaction_type"]
+          tx_hash?: string | null
           updated_at?: string | null
           user_id?: string
         }

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { ethers } from "ethers";
 
 const WalletAuthForm = () => {
   const [loading, setLoading] = useState(false);
@@ -34,6 +35,10 @@ const WalletAuthForm = () => {
         throw new Error("No accounts found");
       }
 
+      // Get the network information
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      const networkId = parseInt(chainId, 16);
+      
       // Generate a random nonce for the user to sign
       const nonce = generateNonce();
       
@@ -45,7 +50,7 @@ const WalletAuthForm = () => {
       });
 
       // In a real implementation, we would verify the signature on the server
-      // For now, we'll attempt to sign in with the wallet address as the email
+      // For now, we'll create or authenticate the user with the wallet address
       
       // Create a custom email based on the wallet address
       const walletEmail = `${address.toLowerCase()}@wallet.auth`;
@@ -65,11 +70,36 @@ const WalletAuthForm = () => {
             data: {
               wallet_address: address,
               wallet_type: 'ethereum',
+              chain_id: networkId
             }
           }
         });
         
         if (signUpError) throw signUpError;
+      }
+
+      // Check if the wallet exists in the wallets table
+      const { data: existingWallet } = await supabase
+        .from("wallets")
+        .select("*")
+        .eq("wallet_address", address)
+        .maybeSingle();
+
+      // If wallet doesn't exist, create it
+      if (!existingWallet) {
+        // Get the balance using ethers.js
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const balance = await provider.getBalance(address);
+        const etherBalance = parseFloat(ethers.utils.formatEther(balance));
+
+        // Create a wallet record
+        await supabase.from("wallets").insert({
+          user_id: existingUser.user?.id || newUser?.user?.id,
+          wallet_address: address,
+          wallet_type: "eth",
+          balance: etherBalance,
+          is_default: true
+        });
       }
 
       toast({
@@ -124,8 +154,6 @@ const WalletAuthForm = () => {
           </>
         )}
       </Button>
-
-      {/* Removed the "Coming Soon" section with non-functional wallet buttons */}
     </div>
   );
 };
