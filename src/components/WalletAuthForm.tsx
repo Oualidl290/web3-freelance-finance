@@ -125,25 +125,7 @@ const WalletAuthForm = () => {
         )}
       </Button>
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-gray-200" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-gray-500">Coming Soon</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Button variant="outline" disabled className="text-gray-400 flex items-center justify-center">
-          <span className="w-5 h-5 mr-2 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">C</span>
-          Coinbase
-        </Button>
-        <Button variant="outline" disabled className="text-gray-400 flex items-center justify-center">
-          <span className="w-5 h-5 mr-2 bg-purple-600 rounded-full"></span>
-          WalletConnect
-        </Button>
-      </div>
+      {/* Removed the "Coming Soon" section with non-functional wallet buttons */}
     </div>
   );
 };

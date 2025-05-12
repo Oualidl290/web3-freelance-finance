@@ -96,13 +96,10 @@ const Sidebar = ({ activeTab, setActiveTab, handleCreateInvoiceClick }: SidebarP
         </Button>
       </div>
 
-      {/* Support Section */}
+      {/* Support Section - Removed non-functional Support button */}
       <div className="mt-auto bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
         <p className="text-sm font-medium mb-1">Need Help?</p>
         <p className="text-xs text-gray-500 mb-2">Contact our support team for assistance</p>
-        <Button variant="outline" size="sm" className="w-full text-xs justify-center rounded-lg border-web3-purple/30 text-web3-purple">
-          Support Center
-        </Button>
       </div>
     </div>
   );

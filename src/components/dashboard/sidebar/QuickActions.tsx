@@ -19,8 +19,9 @@ const QuickActions = ({ setActiveTab }: QuickActionsProps) => {
     navigate(`/invoices/${invoiceId}`);
   };
 
+  // Using the navigate function since the project now uses a dialog for invoice creation
   const handleCreateInvoice = () => {
-    navigate('/create-invoice');
+    navigate('/dashboard');
   };
 
   return (
@@ -88,7 +89,7 @@ const QuickActions = ({ setActiveTab }: QuickActionsProps) => {
           </div>
         )}
 
-        {/* Convert action */}
+        {/* Withdraw action - point to wallet tab */}
         <div 
           className="flex items-center gap-3 p-3 bg-gray-50 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
           onClick={() => setActiveTab("wallet")}

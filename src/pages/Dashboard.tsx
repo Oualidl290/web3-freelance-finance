@@ -103,6 +103,7 @@ const Dashboard = () => {
               <p className="text-gray-500 mb-4">
                 Detailed analytics will be available soon to help you track your business performance.
               </p>
+              {/* Removed non-functional button */}
             </div>
           </div>
         );
