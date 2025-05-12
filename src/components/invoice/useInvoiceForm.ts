@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { CreateInvoiceInput } from "@/types/invoice";
+import { UseMutationResult } from "@tanstack/react-query";
 
 type LineItem = {
   id: string;
@@ -10,7 +11,7 @@ type LineItem = {
   amount: number;
 };
 
-export function useInvoiceForm(createInvoice: (data: CreateInvoiceInput) => Promise<string | undefined>) {
+export function useInvoiceForm(createInvoice: UseMutationResult<any, Error, CreateInvoiceInput, unknown>) {
   const [title, setTitle] = useState("");
   const [clientId, setClientId] = useState("");
   const [currency, setCurrency] = useState("USDC");
@@ -124,17 +125,15 @@ export function useInvoiceForm(createInvoice: (data: CreateInvoiceInput) => Prom
       };
 
       // Call create invoice function
-      const invoiceId = await createInvoice(invoiceData);
+      await createInvoice.mutateAsync(invoiceData);
       
-      if (invoiceId) {
-        toast({
-          title: "Success",
-          description: "Invoice created successfully",
-        });
+      toast({
+        title: "Success",
+        description: "Invoice created successfully",
+      });
 
-        // Navigate to the invoice detail page
-        navigate(`/invoices/${invoiceId}`);
-      }
+      // Navigate to the invoices list
+      navigate('/dashboard');
     } catch (error: any) {
       toast({
         title: "Error",

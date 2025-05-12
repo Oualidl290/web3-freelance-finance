@@ -5,6 +5,7 @@ import { ethers } from "ethers";
 import { supabase } from "@/integrations/supabase/client";
 import { Invoice } from "@/types/invoice";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 
 // ABI for a simple Escrow contract
 const ESCROW_ABI = [
@@ -19,6 +20,7 @@ export function useEscrow() {
   const [isReleasing, setIsReleasing] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth(); // Get the current user
 
   // Function to deploy escrow contract (would normally be done once by the platform)
   const deployEscrowContract = async () => {
@@ -31,10 +33,10 @@ export function useEscrow() {
     invoice: Invoice,
     freelancerAddress: string
   ) => {
-    if (!window.ethereum) {
+    if (!window.ethereum || !user) {
       toast({
-        title: "MetaMask not detected",
-        description: "Please install MetaMask to use escrow features",
+        title: "Error",
+        description: !user ? "You must be logged in" : "MetaMask not detected",
         variant: "destructive",
       });
       return;
@@ -87,16 +89,18 @@ export function useEscrow() {
         .eq("id", invoice.id);
       
       // Record transaction
+      const fromAddress = await signer.getAddress();
       await supabase.from("transactions").insert({
         invoice_id: invoice.id,
         transaction_type: "payment",
         amount: invoice.amount,
         currency: invoice.crypto_currency || "eth",
-        from_address: await signer.getAddress(),
+        from_address: fromAddress,
         to_address: escrowAddress,
         tx_hash: receipt.transactionHash,
         status: "confirmed",
         confirmed_at: new Date().toISOString(),
+        user_id: user.id // Add user_id from auth context
       });
       
       // Invalidate queries to refresh data
@@ -123,10 +127,10 @@ export function useEscrow() {
 
   // Function to release funds from escrow
   const releaseFromEscrow = async (invoice: Invoice) => {
-    if (!window.ethereum || !invoice.escrow_contract_address) {
+    if (!window.ethereum || !invoice.escrow_contract_address || !user) {
       toast({
         title: "Error",
-        description: "MetaMask not detected or invalid escrow contract",
+        description: !user ? "You must be logged in" : "MetaMask not detected or invalid escrow contract",
         variant: "destructive",
       });
       return;
@@ -176,16 +180,18 @@ export function useEscrow() {
       });
       
       // Record transaction
+      const fromAddress = invoice.escrow_contract_address;
       await supabase.from("transactions").insert({
         invoice_id: invoice.id,
         transaction_type: "escrow_release",
         amount: invoice.amount,
         currency: invoice.crypto_currency || "eth",
-        from_address: invoice.escrow_contract_address,
+        from_address: fromAddress,
         to_address: invoice.client?.wallet_address || "",
         tx_hash: receipt.transactionHash,
         status: "confirmed",
         confirmed_at: new Date().toISOString(),
+        user_id: user.id // Add user_id from auth context
       });
       
       // Invalidate queries

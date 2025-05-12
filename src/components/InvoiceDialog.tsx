@@ -20,12 +20,12 @@ import {
   DialogTitle,
   DialogClose
 } from "@/components/ui/dialog";
+import { useState } from "react";
 
 // Import our existing components
 import PaymentTierSelector from "./invoice/PaymentTierSelector";
-import LineItems from "./invoice/LineItems";
+import LineItems, { LineItem } from "./invoice/LineItems";
 import InvoiceSummary from "./invoice/InvoiceSummary";
-import { useInvoiceForm } from "./invoice/useInvoiceForm";
 import { Switch } from "./ui/switch";
 
 const InvoiceDialog = () => {
@@ -33,35 +33,65 @@ const InvoiceDialog = () => {
   const { clients, isLoading: clientsLoading } = useClients();
   const { createInvoice } = useInvoices();
   
-  // Use our custom hook for form state and handlers
-  const {
-    title,
-    setTitle,
-    clientId,
-    setClientId,
-    currency,
-    setCurrency,
-    dueDate,
-    setDueDate,
-    description,
-    setDescription,
-    items,
-    addItem,
-    removeItem,
-    updateItemDescription,
-    updateItemAmount,
-    selectedTier,
-    setSelectedTier,
-    escrowEnabled,
-    setEscrowEnabled,
-    escrowDays,
-    setEscrowDays,
-    isSubmitting,
-    calculateTotal,
-    calculateFee,
-    calculateFinalAmount,
-    handleSubmit
-  } = useInvoiceForm(createInvoice);
+  // Form state
+  const [title, setTitle] = useState("");
+  const [clientId, setClientId] = useState("");
+  const [currency, setCurrency] = useState("USDC");
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [description, setDescription] = useState("");
+  const [selectedTier, setSelectedTier] = useState("standard");
+  const [escrowEnabled, setEscrowEnabled] = useState(false);
+  const [escrowDays, setEscrowDays] = useState<number | null>(14);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [items, setItems] = useState<LineItem[]>([
+    { description: "", amount: "0" }
+  ]);
+  
+  // Fee rates based on tier
+  const feeRates: { [key: string]: number } = {
+    basic: 0.02,
+    standard: 0.01,
+    premium: 0.005,
+  };
+  
+  // Add line item
+  const addItem = () => {
+    setItems([...items, { description: "", amount: "0" }]);
+  };
+  
+  // Remove line item
+  const removeItem = (index: number) => {
+    if (items.length > 1) {
+      setItems(items.filter((_, i) => i !== index));
+    }
+  };
+  
+  // Update item description
+  const updateItemDescription = (index: number, value: string) => {
+    setItems(items.map((item, i) => (i === index ? { ...item, description: value } : item)));
+  };
+  
+  // Update item amount
+  const updateItemAmount = (index: number, value: string) => {
+    setItems(items.map((item, i) => (i === index ? { ...item, amount: value } : item)));
+  };
+  
+  // Calculate total amount
+  const calculateTotal = () => {
+    return items.reduce((sum, item) => sum + parseFloat(item.amount || "0"), 0);
+  };
+  
+  // Calculate fee amount
+  const calculateFee = () => {
+    const total = calculateTotal();
+    const feeRate = feeRates[selectedTier] || 0.01;
+    return total * feeRate;
+  };
+  
+  // Calculate final amount
+  const calculateFinalAmount = () => {
+    return calculateTotal() - calculateFee();
+  };
 
   // Form validation
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -77,8 +107,47 @@ const InvoiceDialog = () => {
       return;
     }
     
-    // Submit the form
-    await handleSubmit(e);
+    setIsSubmitting(true);
+    
+    try {
+      // Calculate final amount after fees
+      const finalAmount = calculateFinalAmount();
+      
+      // Due date formatting
+      const formattedDueDate = dueDate ? dueDate.toISOString() : undefined;
+      
+      // Create invoice data
+      const invoiceData = {
+        title,
+        description: description || null,
+        amount: finalAmount,
+        currency,
+        crypto_currency: currency.toLowerCase() === "usdc" ? "usdc" : "eth",
+        status: "draft",
+        due_date: formattedDueDate,
+        client_id: clientId,
+        escrow_enabled: escrowEnabled,
+        escrow_days: escrowEnabled ? escrowDays : null
+      };
+      
+      // Submit the form
+      await createInvoice.mutateAsync(invoiceData);
+      
+      toast({
+        title: "Success",
+        description: "Invoice created successfully",
+      });
+      
+      // Close dialog (this will be handled by parent component)
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create invoice",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -234,9 +303,9 @@ const InvoiceDialog = () => {
         />
         
         <InvoiceSummary
-          total={calculateTotal()}
-          fee={calculateFee()}
-          finalAmount={calculateFinalAmount()}
+          total={calculateTotal().toString()}
+          fee={calculateFee().toString()}
+          finalAmount={calculateFinalAmount().toString()}
           selectedTierId={selectedTier}
           currency={currency}
         />

@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { PlusCircle, Trash2 } from "lucide-react";
 
 export type LineItem = {
+  id?: string;
   description: string;
   amount: string;
 };
