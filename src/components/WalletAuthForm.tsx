@@ -56,14 +56,14 @@ const WalletAuthForm = () => {
       const walletEmail = `${address.toLowerCase()}@wallet.auth`;
       
       // Check if the user exists, if not sign them up
-      const { data: existingUser } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: walletEmail,
         password: signature.substring(0, 20), // Using part of signature as password (demo only)
       });
       
-      if (!existingUser.user) {
+      if (!authData.user) {
         // User doesn't exist, create them
-        const { data: newUser, error: signUpError } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: walletEmail,
           password: signature.substring(0, 20), // Using part of signature as password (demo only)
           options: {
@@ -76,30 +76,57 @@ const WalletAuthForm = () => {
         });
         
         if (signUpError) throw signUpError;
-      }
+        
+        // Use the user ID from the signup response
+        const userId = signUpData?.user?.id;
+        
+        // Check if the wallet exists in the wallets table
+        const { data: existingWallet } = await supabase
+          .from("wallets")
+          .select("*")
+          .eq("wallet_address", address)
+          .maybeSingle();
 
-      // Check if the wallet exists in the wallets table
-      const { data: existingWallet } = await supabase
-        .from("wallets")
-        .select("*")
-        .eq("wallet_address", address)
-        .maybeSingle();
+        // If wallet doesn't exist, create it
+        if (!existingWallet && userId) {
+          // Get the balance using ethers.js
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const balance = await provider.getBalance(address);
+          const etherBalance = parseFloat(ethers.utils.formatEther(balance));
 
-      // If wallet doesn't exist, create it
-      if (!existingWallet) {
-        // Get the balance using ethers.js
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const balance = await provider.getBalance(address);
-        const etherBalance = parseFloat(ethers.utils.formatEther(balance));
+          // Create a wallet record
+          await supabase.from("wallets").insert({
+            user_id: userId,
+            wallet_address: address,
+            wallet_type: "eth",
+            balance: etherBalance,
+            is_default: true
+          });
+        }
+      } else {
+        // User exists, check if the wallet exists in the wallets table
+        const { data: existingWallet } = await supabase
+          .from("wallets")
+          .select("*")
+          .eq("wallet_address", address)
+          .maybeSingle();
 
-        // Create a wallet record
-        await supabase.from("wallets").insert({
-          user_id: existingUser.user?.id || newUser?.user?.id,
-          wallet_address: address,
-          wallet_type: "eth",
-          balance: etherBalance,
-          is_default: true
-        });
+        // If wallet doesn't exist, create it
+        if (!existingWallet) {
+          // Get the balance using ethers.js
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const balance = await provider.getBalance(address);
+          const etherBalance = parseFloat(ethers.utils.formatEther(balance));
+
+          // Create a wallet record
+          await supabase.from("wallets").insert({
+            user_id: authData.user.id,
+            wallet_address: address,
+            wallet_type: "eth",
+            balance: etherBalance,
+            is_default: true
+          });
+        }
       }
 
       toast({
