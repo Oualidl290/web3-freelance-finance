@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useTransactions } from "@/hooks/useTransactions";
 import { Button } from "@/components/ui/button";
@@ -29,6 +28,15 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { exportToCSV, exportToJSON } from "@/utils/exportUtils";
+import { toast } from "@/components/ui/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
 
 type DateRange = {
   from: Date | undefined;
@@ -81,6 +89,49 @@ const PaymentsPage = () => {
   };
   
   const filteredTransactions = getFilteredTransactions();
+  
+  // New export functions
+  const handleExport = (format: 'csv' | 'json') => {
+    try {
+      const dataToExport = filteredTransactions.map(tx => ({
+        id: tx.id,
+        type: tx.transaction_type,
+        amount: tx.amount,
+        currency: tx.currency,
+        status: tx.status,
+        created_at: tx.created_at ? format(new Date(tx.created_at), 'yyyy-MM-dd HH:mm:ss') : '',
+        confirmed_at: tx.confirmed_at ? format(new Date(tx.confirmed_at), 'yyyy-MM-dd HH:mm:ss') : '',
+        from_address: tx.from_address || '',
+        to_address: tx.to_address || '',
+        transaction_hash: tx.transaction_hash || tx.tx_hash || '',
+        invoice_number: tx.invoice?.invoice_number || '',
+        invoice_title: tx.invoice?.title || ''
+      }));
+      
+      if (format === 'csv') {
+        exportToCSV(dataToExport, 'transactions');
+        toast({
+          title: "Transactions exported successfully",
+          description: `${dataToExport.length} transactions exported as CSV`,
+          variant: "default",
+        });
+      } else {
+        exportToJSON(dataToExport, 'transactions');
+        toast({
+          title: "Transactions exported successfully",
+          description: `${dataToExport.length} transactions exported as JSON`,
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error("Error exporting transactions:", error);
+      toast({
+        title: "Export failed",
+        description: "There was an error exporting your transactions",
+        variant: "destructive",
+      });
+    }
+  };
   
   const getTransactionIcon = (type: string) => {
     if (type === "payment") {
@@ -138,10 +189,22 @@ const PaymentsPage = () => {
             <span>Filter</span>
           </Button>
           
-          <Button variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            <span>Export</span>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Download className="h-4 w-4" />
+                <span>Export</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('json')}>
+                Export as JSON
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       

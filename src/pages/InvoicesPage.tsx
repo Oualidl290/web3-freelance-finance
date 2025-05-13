@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useInvoices } from "@/hooks/useInvoices";
 import { Button } from "@/components/ui/button";
@@ -29,12 +28,15 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { exportToCSV, exportToJSON } from "@/utils/exportUtils";
+import { toast } from "@/components/ui/use-toast";
 
 const statusIcons = {
   draft: <Clock className="h-4 w-4 text-gray-500" />,
@@ -124,6 +126,45 @@ const InvoicesPage = () => {
   
   const filteredInvoices = getFilteredInvoices();
 
+  const handleExport = (format: 'csv' | 'json') => {
+    try {
+      const dataToExport = filteredInvoices.map(invoice => ({
+        invoice_number: invoice.invoice_number,
+        title: invoice.title,
+        client: invoice.client?.name || 'No client',
+        client_email: invoice.client?.email || 'No email',
+        amount: invoice.amount,
+        currency: invoice.currency,
+        status: invoice.status,
+        created_at: invoice.created_at ? format(new Date(invoice.created_at), 'yyyy-MM-dd') : '',
+        due_date: invoice.due_date ? format(new Date(invoice.due_date), 'yyyy-MM-dd') : ''
+      }));
+      
+      if (format === 'csv') {
+        exportToCSV(dataToExport, 'invoices');
+        toast({
+          title: "Invoices exported successfully",
+          description: `${dataToExport.length} invoices exported as CSV`,
+          variant: "default",
+        });
+      } else {
+        exportToJSON(dataToExport, 'invoices');
+        toast({
+          title: "Invoices exported successfully",
+          description: `${dataToExport.length} invoices exported as JSON`,
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error("Error exporting invoices:", error);
+      toast({
+        title: "Export failed",
+        description: "There was an error exporting your invoices",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -210,10 +251,22 @@ const InvoicesPage = () => {
           </Button>
         </div>
         
-        <Button variant="outline" className="gap-2">
-          <Download className="h-4 w-4" />
-          <span>Export</span>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              <span>Export</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleExport('csv')}>
+              Export as CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport('json')}>
+              Export as JSON
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
